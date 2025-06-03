@@ -1,0 +1,171 @@
+/* src/styles/Dashboard/RsmDashboard.module.css */
+.container {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logout {
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.controls {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.statusBtn {
+  padding: 8px 12px;
+  border: 1px solid #aaa;
+  background: #ecf0f1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.active {
+  background-color: #1abc9c;
+  color: white;
+  border-color: #1abc9c;
+}
+
+.searchInput {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.approveBtn {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.pageBtn {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.activePage {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.rejectBtn {
+  background-color: #f44336;
+  color: white;
+  padding: 6px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.rejectBtn:hover {
+  background-color: #d32f2f;
+}
+
+.filtersRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.dropdown {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.dateInput {
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.filterControls select,
+.filterControls input[type="date"] {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.loader {
+  text-align: center;
+  padding: 40px 0;
+  font-size: 18px;
+  color: #444;
+}
+.spinner {
+  border: 4px solid #eee;
+  border-top: 4px solid #3c7c3f;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 12px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

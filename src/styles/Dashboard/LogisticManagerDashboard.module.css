@@ -1,0 +1,275 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100vw;
+  font-family: Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.topbar {
+  background-color: #f4f4f4;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.logoutButton {
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.content {
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.controls {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.filterControls select,
+.filterControls input[type="date"] {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.refreshBtn {
+  background-color: #ffffff;
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  margin-right: 10px;
+  /* border: 1px solid #aaa; */
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.refreshBtn:hover {
+  background-color: #c2c2c2;
+}
+
+.statusBtn {
+  padding: 8px 12px;
+  border: 1px solid #aaa;
+  background: #ecf0f1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.statusBtn:hover{
+  background-color: #c6c9ca;
+}
+
+.exportButton{
+   padding: 6px 10px;
+   background-color: #e4e4e4;
+   border: none;
+   cursor: pointer;
+   border-radius: 4px;
+}
+
+
+.active {
+  background-color: #1abc9c;
+  color: white;
+  border-color: #1abc9c;
+}
+
+.active:hover {
+  background-color: #169b80;
+  color: white;
+  border-color: #138d75;
+}
+
+.searchInput {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  overflow-x: auto;
+  table-layout: auto;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+  min-width: 100px;
+}
+
+.innerTable {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  margin-top: 10px;
+}
+
+.innerTable th,
+.innerTable td {
+  padding: 4px;
+  border: 1px solid #ccc;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.editButton,
+.sendButton,
+.approveBtn,
+.rejectButton {
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.editButton {
+  background-color: #007bff;
+}
+
+.sendButton {
+  background-color: #ff0000;
+  margin-left: 10px;
+}
+
+.approveBtn {
+  background-color: #27ae60;
+}
+
+.rejectButton {
+  background-color: #e74c3c;
+  margin-top: 10px;
+  padding: 6px 16px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.pageBtn {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.activePage {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.bossApproved {
+  background-color: #d4edda;
+}
+
+.bossRejected {
+  background-color: #f8d7da;
+}
+
+.welcome {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 4px;
+  color: #666;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+/* Responsive Fixes */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters,
+  .filterControls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .logoutButton {
+    align-self: flex-end;
+  }
+
+  .table,
+  .innerTable {
+    font-size: 0.8rem;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    font-size: 0.85rem;
+  }
+}

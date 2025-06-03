@@ -1,0 +1,118 @@
+/* src/pages/Login.module.css */
+
+.loginPage {
+  background: linear-gradient(135deg, #1e1f3a, #4e8df5);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+}
+
+.loginBox {
+  background: #ffffffee; /* slightly transparent white */
+  padding: 3.5rem 3rem;
+  border-radius: 20px;
+  box-shadow:
+    0 4px 12px rgba(78, 141, 245, 0.4),
+    0 12px 32px rgba(45, 45, 68, 0.2);
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  animation: slideIn 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: saturate(180%) blur(10px);
+  border: 1px solid rgba(78, 141, 245, 0.3);
+}
+
+.loginBox h2 {
+  margin-bottom: 12px;
+  color: #1e1f3a;
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+.subtext {
+  margin-bottom: 2.5rem;
+  color: #556677;
+  font-size: 1rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 18px;
+  margin: 12px 0;
+  border: 1.8px solid #ccd6f6;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  color: #1e1f3a;
+  background: #f9fbff;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.input::placeholder {
+  color: #9aa7c1;
+  font-weight: 500;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #4e8df5;
+  box-shadow: 0 0 8px #4e8df5aa;
+  background: #fff;
+}
+
+.button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 1.5rem;
+  background: linear-gradient(90deg, #4e8df5, #376cd0);
+  border: none;
+  color: white;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.4s ease, transform 0.2s ease;
+  user-select: none;
+  box-shadow: 0 8px 15px rgba(78, 141, 245, 0.3);
+}
+
+.button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #376cd0, #2c55b8);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(55, 108, 208, 0.4);
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  box-shadow: none;
+  background: #a0b9f7;
+}
+
+.error {
+  color: #ff4d4f;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

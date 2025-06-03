@@ -1,0 +1,182 @@
+/* src/styles/Dashboard/RsmDashboard.module.css */
+.container {
+  padding: 20px;
+  /* max-width: 1200px; */
+  min-width: 100vw;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logout {
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.controls {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.statusBtn {
+  padding: 8px 12px;
+  border: 1px solid #aaa;
+  background: #ecf0f1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.statusBtn:hover{
+  background-color: #c6c9ca;
+}
+
+.active {
+  background-color: #1abc9c;
+  color: white;
+  border-color: #1abc9c;
+}
+.active {
+  background-color: #1abc9c;
+  color: white;
+  border-color: #1abc9c;
+}
+
+.searchInput {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.approveBtn {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 6px 24px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.rejectBtn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 30px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.pageBtn {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+
+.activePage {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.bossApproved {
+  background-color: #d4edda;
+  /* Light green */
+}
+
+.bossRejected {
+  background-color: #f8d7da;
+  /* Light red */
+}
+
+.filterControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.filterControls select,
+.filterControls input[type="date"] {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.welcome {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 4px;
+  color: #666;
+}
+
+.refreshBtn {
+  background-color: #ffffff;
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  margin-right: 10px;
+  /* border: 1px solid #aaa; */
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.refreshBtn:hover {
+  background-color: #c2c2c2;
+}
+
+.exportButton{
+   padding: 6px 10px;
+   background-color: #e4e4e4;
+   border: none;
+   cursor: pointer;
+   border-radius: 4px;
+}
