@@ -194,7 +194,7 @@ const SODashboard = () => {
               const rowStyle =
                 order.status === "Approved"
                   ? { backgroundColor: "#d4edda" }
-                  : order.status === "Rejected"
+                  : order.status === "Rejected" || "Rejected By BM/RSM" || "Rejected by Logistic"
                   ? { backgroundColor: "#f8d7da" }
                   : {};
 
