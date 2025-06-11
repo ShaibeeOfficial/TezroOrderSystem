@@ -24,7 +24,7 @@ const LogisticManagerDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [filteredOrders, setFilteredOrders] = useState([]);
-  const [activeStatus, setActiveStatus] = useState("RSM Submitted");
+  const [activeStatus, setActiveStatus] = useState("BM/RSM Submitted");
   const [soFilter, setSoFilter] = useState("All");
   const [rsmFilter, setRsmFilter] = useState("All");
   const [partyFilter, setPartyFilter] = useState("All");
@@ -39,7 +39,7 @@ const LogisticManagerDashboard = () => {
     try {
       const q = query(
         collection(db, "orders"),
-        where("status", "in", ["RSM Submitted", "Logistic Reviewed", "Approved", "Rejected"]),
+        where("status", "in", ["BM/RSM Submitted", "Logistic Reviewed", "Approved", "Rejected"]),
         orderBy("createdAt", "desc")
       );
       const snapshot = await getDocs(q);
@@ -76,6 +76,7 @@ const LogisticManagerDashboard = () => {
             soName,
             rsmName,
             balance,
+            partyCode: orderData.partyCode || '-', // ✅ Add this line
           };
         })
       );
@@ -156,12 +157,12 @@ const LogisticManagerDashboard = () => {
         RSM: order.rsmName,
         Party: order.partyName,
         Status: order.status,
-        CommitmentDate: order.commitmentDate?.toDate?.().toISOString().split('T')[0] || '',
         CommitmentMessage: order.commitmentOfPayment || '',
-        Products: products.map(p => p.name || '').join('\n'),
-        Varieties: products.map(p => p.variety || '').join('\n'),
+        CommitmentDate: order.commitmentDate?.toDate?.().toISOString().split('T')[0] || '',
         Seasons: products.map(p => p.season || '').join('\n'),
         Categories: products.map(p => p.category || '').join('\n'),
+        Products: products.map(p => p.name || '').join('\n'),
+        Varieties: products.map(p => p.variety || '').join('\n'),
         Quantities: products.map(p => p.quantity ?? '').join('\n'),
         Debits: products.map(p => p.debit ?? '').join('\n'),
         Credits: products.map(p => p.credit ?? '').join('\n')
@@ -202,8 +203,8 @@ const LogisticManagerDashboard = () => {
               {
                 season: '',
                 category: '',
-                name: '',
-                variety: '',
+                name: 'N/A',
+                variety: 'N/A',
                 quantity: 0,
                 debit: '',
                 credit: '',
@@ -286,7 +287,7 @@ const LogisticManagerDashboard = () => {
               <button className={styles.refreshBtn} onClick={fetchOrders} disabled={isLoading}>
                 🔄 {isLoading ? "Refreshing..." : ""}
               </button>
-              {["All", "RSM Submitted", "Approved", "Rejected"].map((status) => (
+              {["All", "BM/RSM Submitted", "Approved", "Rejected"].map((status) => (
                 <button
                   key={status}
                   className={`${styles.statusBtn} ${activeStatus === status ? styles.active : ""}`}
@@ -299,14 +300,14 @@ const LogisticManagerDashboard = () => {
 
             <div className={styles.filterControls}>
               <select value={rsmFilter} onChange={(e) => setRsmFilter(e.target.value)}>
-                <option value="All">All RSMs</option>
+                <option value="All">All BM/RSMs</option>
                 {[...new Set(orders.map((o) => o.rsmName || "-"))].map((rsm, idx) => (
                   <option key={idx} value={rsm}>{rsm}</option>
                 ))}
               </select>
 
               <select value={soFilter} onChange={(e) => setSoFilter(e.target.value)}>
-                <option value="All">All SOs</option>
+                <option value="All">All T.Ms</option>
                 {[...new Set(orders.map((o) => o.soName))].map((so, idx) => (
                   <option key={idx} value={so}>{so}</option>
                 ))}
@@ -319,25 +320,25 @@ const LogisticManagerDashboard = () => {
                 ))}
               </select>
               <div className={styles.dateFilter}>
-              <label>From</label>
-              <input
-                type="date"
-                value={dateRange.from}
-                onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-              />
-              <label>To</label>
-              <input
-                type="date"
-                value={dateRange.to}
-                onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-              />
+                <label>From</label>
+                <input
+                  type="date"
+                  value={dateRange.from}
+                  onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
+                />
+                <label>To</label>
+                <input
+                  type="date"
+                  value={dateRange.to}
+                  onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
+                />
 
-              <label>Commitment Date</label>
-              <input
-                type="date"
-                value={commitmentDateFilter}
-                onChange={(e) => setCommitmentDateFilter(e.target.value)}
-              />
+                <label>Commitment Date</label>
+                <input
+                  type="date"
+                  value={commitmentDateFilter}
+                  onChange={(e) => setCommitmentDateFilter(e.target.value)}
+                />
               </div>
             </div>
             <button
@@ -378,7 +379,8 @@ const LogisticManagerDashboard = () => {
                       />Select</th>
                       <th>Date</th>
                       <th>T.M</th>
-                      <th>RSM</th>
+                      <th>BM/RSM</th>
+                      <th>Party Code</th> {/* 👈 Add this */}
                       <th>Party Name</th>
                       <th>Products</th>
                       <th>Commitment</th> {/* 👈 Add this */}
@@ -407,6 +409,7 @@ const LogisticManagerDashboard = () => {
                         <td>{formatDate(order.createdAt)}</td>
                         <td>{order.soName || '-'}</td>
                         <td>{order.rsmName || '-'}</td>
+                        <td>{order.partyCode || '-'}</td>
                         <td>{order.partyName}</td>
                         <td>
                           <table className={styles.innerTable}>
@@ -425,7 +428,7 @@ const LogisticManagerDashboard = () => {
                               {order.products?.map((product, i) => (
                                 <tr key={i}>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="text"
                                         value={product.season || ''}
@@ -436,7 +439,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.season || 'N/A'}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="text"
                                         value={product.category || ''}
@@ -447,7 +450,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.category || 'N/A'}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="text"
                                         value={product.name || ''}
@@ -458,7 +461,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.name || 'N/A'}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="text"
                                         value={product.variety || ''}
@@ -469,7 +472,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.variety || 'N/A'}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="number"
                                         value={product.quantity || 0}
@@ -480,7 +483,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.quantity || 0}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="number"
                                         value={product.debit || ''}
@@ -491,7 +494,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.debit || '-'}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' ? (
+                                    {order.status === 'BM/RSM Submitted' ? (
                                       <input
                                         type="number"
                                         value={product.credit || ''}
@@ -502,7 +505,7 @@ const LogisticManagerDashboard = () => {
                                     ) : product.credit || '-'}
                                   </td>
                                   <td>
-                                    {order.status === 'RSM Submitted' && (
+                                    {order.status === 'BM/RSM Submitted' && (
                                       <button
                                         onClick={() => handleRemoveProduct(order.id, i)}
                                         className={styles.removeProductBtn}
@@ -516,7 +519,7 @@ const LogisticManagerDashboard = () => {
                             </tbody>
                           </table>
 
-                          {order.status === 'RSM Submitted' && (
+                          {order.status === 'BM/RSM Submitted' && (
                             <button
                               className={styles.addProductBtn}
                               onClick={() => handleAddProduct(order.id)}
@@ -532,7 +535,7 @@ const LogisticManagerDashboard = () => {
                         </td>
                         <td>{order.status}</td>
                         <td>
-                          {order.status === 'RSM Submitted' && (
+                          {order.status === 'BM/RSM Submitted' && (
                             <>
                               <button className={styles.approveBtn} onClick={() => handleApprove(order)}>Approve</button>
                               <button className={styles.rejectButton} onClick={() => handleReject(order.id)}>Reject</button>

@@ -148,7 +148,7 @@ const RsmDashboard = () => {
 
     const orderRef = doc(db, "orders", orderId);
     await updateDoc(orderRef, {
-      status: "RSM Submitted",
+      status: "BM/RSM Submitted",
       approvedBy: auth.currentUser.uid,
       commitmentOfPayment: order.commitmentOfPayment,
       commitmentDate: new Date(order.commitmentDate),
@@ -160,7 +160,7 @@ const RsmDashboard = () => {
   const handleReject = async (orderId) => {
     const orderRef = doc(db, "orders", orderId);
     await updateDoc(orderRef, {
-      status: "Rejected By RSM",
+      status: "Rejected By BM/RSM",
       approvedBy: auth.currentUser.uid,
     });
     fetchOrders();
@@ -175,7 +175,7 @@ const RsmDashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>RSM Dashboard</h1>
+        <h1>BM/RSM Dashboard</h1>
         <button
           onClick={async () => {
             await auth.signOut();
@@ -209,7 +209,7 @@ const RsmDashboard = () => {
 
         <div className={styles.filterControls}>
           <select value={soFilter} onChange={(e) => setSoFilter(e.target.value)}>
-            <option value="All">All SOs</option>
+            <option value="All">All T.Ms</option>
             {[...new Set(orders.map((o) => o.soName))].map((so, idx) => (
               <option key={idx} value={so}>{so}</option>
             ))}

@@ -14,11 +14,10 @@ import {
   getDoc,
 } from "firebase/firestore";
 import styles from "../../styles/Dashboard/SODashboard.module.css";
-import UserProfile from "../../components/UserProfile";
+import { FiMenu } from "react-icons/fi";
 
 const SODashboard = () => {
   const [activeTab, setActiveTab] = useState("placeOrder");
-  const [showModal, setShowModal] = useState(false);
   const [parties, setParties] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedParty, setSelectedParty] = useState("");
@@ -29,10 +28,11 @@ const SODashboard = () => {
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
-  // Filter states
   const [filterParty, setFilterParty] = useState("");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -102,8 +102,7 @@ const SODashboard = () => {
     setSelectedProducts(updated);
   };
 
-  const resetOrderModal = () => {
-    setShowModal(false);
+  const resetOrderForm = () => {
     setSelectedParty("");
     setSelectedProducts([]);
   };
@@ -113,6 +112,9 @@ const SODashboard = () => {
       alert("Please select a party and at least one product.");
       return;
     }
+
+    const selectedPartyObj = parties.find(p => p.name === selectedParty);
+    const partyCode = selectedPartyObj?.code || "N/A";
 
     const refCode = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
 
@@ -147,6 +149,7 @@ const SODashboard = () => {
       rsmName,
       createdBy: auth.currentUser.uid,
       partyName: selectedParty,
+      partyCode,
       products: enrichedProducts,
       status: "Pending",
       createdAt: serverTimestamp(),
@@ -155,7 +158,7 @@ const SODashboard = () => {
     try {
       await addDoc(collection(db, "orders"), order);
       alert("Order placed successfully!");
-      resetOrderModal();
+      resetOrderForm();
     } catch (err) {
       console.error("Failed to place order:", err);
     }
@@ -166,87 +169,86 @@ const SODashboard = () => {
 
     const filteredOrders = orders.filter(order => {
       const matchesParty = filterParty ? order.partyName === filterParty : true;
-
       const orderDate = order.createdAt?.toDate?.();
       const matchesStartDate = filterStartDate ? orderDate >= new Date(filterStartDate) : true;
       const matchesEndDate = filterEndDate ? orderDate <= new Date(filterEndDate + "T23:59:59") : true;
-
       return matchesParty && matchesStartDate && matchesEndDate;
     });
 
     if (!filteredOrders.length) return <p>No matching orders found.</p>;
 
     return (
-      <table className={styles.ordersTable}>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Party</th>
-            <th>Status</th>
-            <th>Product</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredOrders.map(order => {
-            const filteredProducts = order.products.filter(p => p.addedBy !== "LM");
-            const rowStyle =
-              order.status === "Approved"
-                ? { backgroundColor: "#d4edda" }
-                : order.status === "Rejected"
-                ? { backgroundColor: "#f8d7da" }
-                : {};
+      <div className={styles.responsiveTable}>
+        <table className={styles.ordersTable}>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Party</th>
+              <th>Status</th>
+              <th>Product</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredOrders.map(order => {
+              const filteredProducts = order.products.filter(p => p.addedBy !== "LM");
+              const rowStyle =
+                order.status === "Approved"
+                  ? { backgroundColor: "#d4edda" }
+                  : order.status === "Rejected"
+                  ? { backgroundColor: "#f8d7da" }
+                  : {};
 
-            return filteredProducts.length === 0 ? (
-              <tr key={order.id} style={rowStyle}>
-                <td>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}</td>
-                <td>{order.partyName}</td>
-                <td>{order.status}</td>
-                <td>N/A</td>
-              </tr>
-            ) : (
-              filteredProducts.map((product, idx) => (
-                <tr key={`${order.id}-${idx}`} style={rowStyle}>
-                  {idx === 0 && (
-                    <>
-                      <td rowSpan={filteredProducts.length}>
-                        {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}
-                      </td>
-                      <td rowSpan={filteredProducts.length}>{order.partyName}</td>
-                      <td rowSpan={filteredProducts.length}>{order.status}</td>
-                    </>
-                  )}
-                  <td>
-                    {product.name} - {product.variety} - {product.packSize} {product.packType} × {product.quantity}
-                  </td>
+              return filteredProducts.length === 0 ? (
+                <tr key={order.id} style={rowStyle}>
+                  <td>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}</td>
+                  <td>{order.partyName}</td>
+                  <td>{order.status}</td>
+                  <td>N/A</td>
                 </tr>
-              ))
-            );
-          })}
-        </tbody>
-      </table>
+              ) : (
+                filteredProducts.map((product, idx) => (
+                  <tr key={`${order.id}-${idx}`} style={rowStyle}>
+                    {idx === 0 && (
+                      <>
+                        <td rowSpan={filteredProducts.length}>
+                          {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}
+                        </td>
+                        <td rowSpan={filteredProducts.length}>{order.partyName}</td>
+                        <td rowSpan={filteredProducts.length}>{order.status}</td>
+                      </>
+                    )}
+                    <td>
+                      {product.name} - {product.variety} - {product.packSize} {product.packType} × {product.quantity}
+                    </td>
+                  </tr>
+                ))
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
   return (
     <div className={styles.dashboardContainer}>
-      <aside className={styles.sidebar}>
+      <div className={styles.mobileHeader}>
         <h2>T.M Dashboard</h2>
-        <button
-          onClick={() => setActiveTab("profile")}
-          className={activeTab === "profile" ? styles.activeTab : ""}
-        >
-          Profile
+        <p>{soName}</p>
+        <button className={styles.hamburger} onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <FiMenu size={24} />
         </button>
-        <button
-          onClick={() => setActiveTab("placeOrder")}
-          className={activeTab === "placeOrder" ? styles.activeTab : ""}
-        >
+      </div>
+
+      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.showSidebar : ""}`}>
+        <div className="nameView">
+          <h2>TM Dashboard</h2>
+          <p>{soName}</p>
+        </div>
+        <button onClick={() => setActiveTab("placeOrder")} className={activeTab === "placeOrder" ? styles.activeTab : ""}>
           Place Order
         </button>
-        <button
-          onClick={() => setActiveTab("orders")}
-          className={activeTab === "orders" ? styles.activeTab : ""}
-        >
+        <button onClick={() => setActiveTab("orders")} className={activeTab === "orders" ? styles.activeTab : ""}>
           View Orders
         </button>
         <button onClick={handleLogout} className={styles.logoutButton}>
@@ -255,24 +257,60 @@ const SODashboard = () => {
       </aside>
 
       <main className={styles.mainContent}>
-        {activeTab === "profile" && <UserProfile />}
         {activeTab === "placeOrder" && (
-          <div>
+          <div className={styles.formSection}>
             <h3>Place New Order</h3>
-            <button onClick={() => setShowModal(true)} className={styles.cancelBtn}>
-              + Create Order
-            </button>
+            <label>Party</label>
+            <select value={selectedParty} onChange={(e) => setSelectedParty(e.target.value)} className={styles.partySection}>
+              <option value="">Select a party</option>
+              {parties.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+
+            {selectedProducts.map((product, index) => (
+              <div key={index} className={styles.productRow}>
+                <select
+                  value={product.productId}
+                  onChange={(e) => handleProductChange(index, "productId", e.target.value)}
+                  className={styles.productSelect}
+                >
+                  <option value="">Select Product</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} - {p.variety} - {p.packSize} - {p.packType}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Qty"
+                  min="1"
+                  value={product.quantity}
+                  onChange={(e) => handleProductChange(index, "quantity", e.target.value)}
+                  className={styles.qtyInput}
+                />
+                <button onClick={() => {
+                  const updated = selectedProducts.filter((_, i) => i !== index);
+                  setSelectedProducts(updated);
+                }} className={styles.removeBtn}>Remove</button>
+              </div>
+            ))}
+
+            <button onClick={handleAddProduct} className={styles.productBtn}>+ Add Product</button>
+            <div className={styles.actionButtons}>
+              <button onClick={handleSubmitOrder} className={styles.submitBtn}>Submit Order</button>
+              <button onClick={resetOrderForm} className={styles.cancelBtn}>Reset</button>
+            </div>
           </div>
         )}
+
         {activeTab === "orders" && (
           <div>
             <h2>My Orders</h2>
-
-            {/* Filter controls */}
-            <div
-              className={styles.filterContainer}
-              style={{ marginBottom: "1rem", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}
-            >
+            <div className={styles.filterContainer}>
               <label>Party: </label>
               <select value={filterParty} onChange={(e) => setFilterParty(e.target.value)}>
                 <option value="">All</option>
@@ -282,97 +320,12 @@ const SODashboard = () => {
                   </option>
                 ))}
               </select>
-
-              <label style={{ marginLeft: "1rem" }}>Start Date: </label>
-              <input
-                type="date"
-                value={filterStartDate}
-                onChange={(e) => setFilterStartDate(e.target.value)}
-              />
-
-              <label style={{ marginLeft: "1rem" }}>End Date: </label>
-              <input
-                type="date"
-                value={filterEndDate}
-                onChange={(e) => setFilterEndDate(e.target.value)}
-              />
+              <label>Start Date: </label>
+              <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
+              <label>End Date: </label>
+              <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
             </div>
-
             {renderOrdersList()}
-          </div>
-        )}
-
-        {showModal && (
-          <div className={styles.modalBackdrop}>
-            <div className={styles.modalContent}>
-              <h3>New Order</h3>
-              <label>Party</label>
-              <select
-                value={selectedParty}
-                onChange={(e) => setSelectedParty(e.target.value)}
-                className={styles.partySection}
-              >
-                <option value="">Select a party</option>
-                {parties.map((p) => (
-                  <option key={p.id} value={p.name}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-
-              {selectedProducts.map((product, index) => (
-                <div
-                  key={index}
-                  style={{ display: "flex", gap: "10px", marginBottom: "8px" }}
-                >
-                  <select
-                    value={product.productId}
-                    onChange={(e) => handleProductChange(index, "productId", e.target.value)}
-                  >
-                    <option value="">Select Product</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} - {p.variety} - {p.packSize} - {p.packType}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    placeholder="Quantity"
-                    min="1"
-                    value={product.quantity}
-                    onChange={(e) => handleProductChange(index, "quantity", e.target.value)}
-                  />
-                  <button
-                    onClick={() => {
-                      const updated = selectedProducts.filter((_, i) => i !== index);
-                      setSelectedProducts(updated);
-                    }}
-                    style={{
-                      background: "#e74c3c",
-                      color: "#fff",
-                      border: "none",
-                      padding: "5px 10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-
-              <button onClick={handleAddProduct} className={styles.productBtn}>
-                + Add Product
-              </button>
-              <div style={{ marginTop: "10px" }}>
-                <button onClick={handleSubmitOrder} className={styles.submitBtn}>
-                  Submit Order
-                </button>
-                <button onClick={resetOrderModal} className={styles.cancelBtn}>
-                  Cancel
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </main>

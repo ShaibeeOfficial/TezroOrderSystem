@@ -62,10 +62,11 @@ const BossDashboard = () => {
         OrderDate: order.createdAt?.toDate?.().toLocaleDateString('en-GB') || '',
         SO: order.soName,
         RSM: order.rsmName,
+        Code: order.partyCode,
         Party: order.partyName,
         Status: order.status,
-        CommitmentDate: order.commitmentDate?.toDate?.().toISOString().split('T')[0] || '',
         CommitmentMessage: order.commitmentOfPayment || '',
+        CommitmentDate: order.commitmentDate?.toDate?.().toISOString().split('T')[0] || '',
         Products: products.map(p => p.name || '').join('\n'),
         Varieties: products.map(p => p.variety || '').join('\n'),
         Seasons: products.map(p => p.season || '').join('\n'),
@@ -266,14 +267,14 @@ const BossDashboard = () => {
 
         <div className={styles.filterControls}>
           <select value={rsmFilter} onChange={(e) => setRsmFilter(e.target.value)}>
-            <option value="All">All RSMs</option>
+            <option value="All">All BM/RSMs</option>
             {[...new Set(orders.map((o) => o.rsmName || "-"))].map((rsm, idx) => (
               <option key={idx} value={rsm}>{rsm}</option>
             ))}
           </select>
 
           <select value={soFilter} onChange={(e) => setSoFilter(e.target.value)}>
-            <option value="All">All SOs</option>
+            <option value="All">All T.Ms</option>
             {[...new Set(orders.map((o) => o.soName))].map((so, idx) => (
               <option key={idx} value={so}>{so}</option>
             ))}
@@ -347,7 +348,8 @@ const BossDashboard = () => {
                 />Select</th>
                 <th>Date</th>
                 <th>T.M</th>
-                <th>RSM</th>
+                <th>BM/RSM</th>
+                <th>Party Code</th>
                 <th>Party</th>
                 <th>Balance</th>
                 <th>Commitment</th>
@@ -387,6 +389,7 @@ const BossDashboard = () => {
                   </td>
                   <td>{order.soName}</td>
                   <td>{order.rsmName || "-"}</td>
+                  <td>{order.partyCode || "N/A"}</td>
                   <td>{order.partyName}</td>
                   <td>
                     {order.balance > 0

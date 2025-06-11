@@ -10,6 +10,7 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+  gap: 10px;
 }
 
 .logout {
@@ -26,8 +27,7 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .filters {
@@ -66,7 +66,8 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  min-width: 800px;
 }
 
 .table th,
@@ -74,6 +75,18 @@
   padding: 10px;
   border: 1px solid #ddd;
   text-align: left;
+}
+
+.innerTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.innerTable th,
+.innerTable td {
+  padding: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
 }
 
 .approveBtn {
@@ -85,12 +98,26 @@
   border-radius: 4px;
 }
 
+.rejectBtn {
+  background-color: #f44336;
+  color: white;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.rejectBtn:hover {
+  background-color: #d32f2f;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
   margin-top: 20px;
-  gap: 5px;
   flex-wrap: wrap;
+  gap: 5px;
 }
 
 .pageBtn {
@@ -106,41 +133,10 @@
   border-color: #3498db;
 }
 
-.rejectBtn {
-  background-color: #f44336;
-  color: white;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-.rejectBtn:hover {
-  background-color: #d32f2f;
-}
-
-.filtersRow {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-.dropdown {
-  padding: 6px 10px;
-  font-size: 14px;
-}
-
-.dateInput {
-  padding: 6px 10px;
-  font-size: 14px;
-}
-
 .filterControls {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .filterControls select,
@@ -148,6 +144,7 @@
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  min-width: 150px;
 }
 
 .loader {
@@ -156,6 +153,7 @@
   font-size: 18px;
   color: #444;
 }
+
 .spinner {
   border: 4px solid #eee;
   border-top: 4px solid #3c7c3f;
@@ -165,7 +163,55 @@
   margin: 0 auto 12px;
   animation: spin 1s linear infinite;
 }
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ✅ Responsive Tweaks */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.85rem;
+    min-width: 100%;
+  }
+
+  .innerTable th,
+  .innerTable td {
+    font-size: 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.3rem;
+  }
+
+  .logout {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  .approveBtn,
+  .rejectBtn {
+    padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+
+  .filterControls label {
+    display: block;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .filterControls select,
+  .filterControls input[type="date"] {
+    width: 100%;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  .filters {
+    justify-content: center;
+  }
 }
