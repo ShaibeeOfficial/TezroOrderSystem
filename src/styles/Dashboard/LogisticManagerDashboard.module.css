@@ -138,6 +138,7 @@
   overflow-x: auto;
   margin-top: 20px;
   width: 100%;
+  /* border: 2px solid #333; */
 }
 
 .table {
@@ -151,7 +152,7 @@
 .table th,
 .table td {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #050505;
   text-align: left;
   min-width: 100px;
 }

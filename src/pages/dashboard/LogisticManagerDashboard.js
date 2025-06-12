@@ -382,6 +382,7 @@ const LogisticManagerDashboard = () => {
                       <th>BM/RSM</th>
                       <th>Party Code</th> {/* 👈 Add this */}
                       <th>Party Name</th>
+                      <th>POD</th>
                       <th>Products</th>
                       <th>Commitment</th> {/* 👈 Add this */}
                       <th>Status</th>
@@ -411,6 +412,7 @@ const LogisticManagerDashboard = () => {
                         <td>{order.rsmName || '-'}</td>
                         <td>{order.partyCode || '-'}</td>
                         <td>{order.partyName}</td>
+                        <td>{order.pod}</td>
                         <td>
                           <table className={styles.innerTable}>
                             <thead>

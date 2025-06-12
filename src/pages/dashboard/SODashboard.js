@@ -19,6 +19,7 @@ import { FiMenu } from "react-icons/fi";
 const SODashboard = () => {
   const [activeTab, setActiveTab] = useState("placeOrder");
   const [parties, setParties] = useState([]);
+  const [pod, setPod] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedParty, setSelectedParty] = useState("");
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -72,7 +73,16 @@ const SODashboard = () => {
       try {
         const ordersQuery = query(collection(db, "orders"), where("soId", "==", auth.currentUser.uid));
         const querySnapshot = await getDocs(ordersQuery);
-        setOrders(querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Sort by createdAt descending
+        const sorted = ordersData.sort((a, b) => {
+          const dateA = a.createdAt?.toDate?.() || new Date(0);
+          const dateB = b.createdAt?.toDate?.() || new Date(0);
+          return dateB - dateA;
+        });
+
+        setOrders(sorted);
       } catch (err) {
         console.error("Error fetching orders:", err);
         setOrders([]);
@@ -105,6 +115,7 @@ const SODashboard = () => {
   const resetOrderForm = () => {
     setSelectedParty("");
     setSelectedProducts([]);
+    setPod("");
   };
 
   const handleSubmitOrder = async () => {
@@ -122,23 +133,23 @@ const SODashboard = () => {
       const product = products.find(prod => prod.id === p.productId);
       return product
         ? {
-            productId: p.productId,
-            name: product.name || "",
-            category: product.category || "N/A",
-            variety: product.variety || "N/A",
-            packSize: product.packSize || "N/A",
-            packType: product.packType || "N/A",
-            quantity: p.quantity,
-          }
+          productId: p.productId,
+          name: product.name || "",
+          category: product.category || "N/A",
+          variety: product.variety || "N/A",
+          packSize: product.packSize || "N/A",
+          packType: product.packType || "N/A",
+          quantity: p.quantity,
+        }
         : {
-            productId: p.productId,
-            name: "Unknown",
-            category: "N/A",
-            variety: "N/A",
-            packSize: "N/A",
-            packType: "N/A",
-            quantity: p.quantity,
-          };
+          productId: p.productId,
+          name: "Unknown",
+          category: "N/A",
+          variety: "N/A",
+          packSize: "N/A",
+          packType: "N/A",
+          quantity: p.quantity,
+        };
     });
 
     const order = {
@@ -150,6 +161,7 @@ const SODashboard = () => {
       createdBy: auth.currentUser.uid,
       partyName: selectedParty,
       partyCode,
+      pod,
       products: enrichedProducts,
       status: "Pending",
       createdAt: serverTimestamp(),
@@ -184,6 +196,7 @@ const SODashboard = () => {
             <tr>
               <th>Date</th>
               <th>Party</th>
+              <th>POD</th>
               <th>Status</th>
               <th>Product</th>
             </tr>
@@ -194,14 +207,15 @@ const SODashboard = () => {
               const rowStyle =
                 order.status === "Approved"
                   ? { backgroundColor: "#d4edda" }
-                  : order.status === "Rejected" || "Rejected By BM/RSM" || "Rejected by Logistic"
-                  ? { backgroundColor: "#f8d7da" }
-                  : {};
+                  : order.status === "Rejected"
+                    ? { backgroundColor: "#f8d7da" }
+                    : {};
 
               return filteredProducts.length === 0 ? (
                 <tr key={order.id} style={rowStyle}>
                   <td>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}</td>
                   <td>{order.partyName}</td>
+                  {/* <td>{order.pod}</td> */}
                   <td>{order.status}</td>
                   <td>N/A</td>
                 </tr>
@@ -214,6 +228,7 @@ const SODashboard = () => {
                           {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}
                         </td>
                         <td rowSpan={filteredProducts.length}>{order.partyName}</td>
+                        <td rowSpan={filteredProducts.length}>{order.pod || "N/A"}</td>
                         <td rowSpan={filteredProducts.length}>{order.status}</td>
                       </>
                     )}
@@ -269,7 +284,13 @@ const SODashboard = () => {
                 </option>
               ))}
             </select>
-
+            <label>POD</label>
+            <textarea
+              value={pod}
+              onChange={(e) => setPod(e.target.value)}
+              placeholder="Enter Your POD"
+              className={styles.partySection}
+            />
             {selectedProducts.map((product, index) => (
               <div key={index} className={styles.productRow}>
                 <select

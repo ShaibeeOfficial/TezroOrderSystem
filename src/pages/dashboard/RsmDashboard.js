@@ -257,6 +257,7 @@ const RsmDashboard = () => {
                 <th>Date</th>
                 <th>T.M</th>
                 <th>Party</th>
+                <th>POD</th>
                 <th>Commitment</th>
                 <th>Status</th>
                 <th>Products</th>
@@ -267,18 +268,17 @@ const RsmDashboard = () => {
               {paginatedOrders.map((order) => (
                 <tr
                   key={order.id}
-                  style={{
-                    backgroundColor:
-                      order.status === "Approved"
-                        ? "#d4edda"
-                        : order.status === "Rejected"
-                        ? "#f8d7da"
-                        : "transparent",
-                  }}
+                  className={`${styles.orderRow} ${order.status === "Approved"
+                      ? styles.approvedBorder
+                      : order.status === "Rejected"
+                        ? styles.rejectedBorder
+                        : styles.pendingBorder
+                    }`}
                 >
                   <td>{order.createdAt?.toDate?.().toLocaleDateString() || "N/A"}</td>
                   <td>{order.soName}</td>
                   <td>{order.partyName}</td>
+                  <td>{order.pod}</td>
                   <td>
                     {order.status === "Pending" ? (
                       <>

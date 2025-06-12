@@ -147,6 +147,28 @@
   min-width: 150px;
 }
 
+.orderRow {
+  border: 2px solid transparent;
+}
+
+.approvedBorder {
+  /* color: #fff; */
+  background-color:#d4edda;
+  border-color: #000; /* green */
+  box-shadow: 0 0 4px rgba(40, 167, 69, 0.6);
+}
+
+.rejectedBorder {
+  background-color:#f8d7da;
+  border-color: #000; /* red */
+}
+
+.pendingBorder {
+  border-color: #000000; /* yellow */
+}
+
+
+
 .loader {
   text-align: center;
   padding: 40px 0;

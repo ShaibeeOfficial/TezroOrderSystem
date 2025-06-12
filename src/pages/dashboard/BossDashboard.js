@@ -351,6 +351,7 @@ const BossDashboard = () => {
                 <th>BM/RSM</th>
                 <th>Party Code</th>
                 <th>Party</th>
+                <th>POD</th>
                 <th>Balance</th>
                 <th>Commitment</th>
                 <th>Status</th>
@@ -391,6 +392,7 @@ const BossDashboard = () => {
                   <td>{order.rsmName || "-"}</td>
                   <td>{order.partyCode || "N/A"}</td>
                   <td>{order.partyName}</td>
+                  <td>{order.pod}</td>
                   <td>
                     {order.balance > 0
                       ? `Rs. ${order.balance} (Credit)`

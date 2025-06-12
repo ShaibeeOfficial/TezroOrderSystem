@@ -7,6 +7,7 @@ import SODashboard from "./pages/dashboard/SODashboard";
 import UserProfile from "./components/UserProfile";
 import LogisticManagerDashboard from "./pages/dashboard/LogisticManagerDashboard";
 import BossDashboard from "./pages/dashboard/BossDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -15,12 +16,59 @@ function App() {
         {/* 👇 Default route redirects to Login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/userprofile" element={<UserProfile />} />
-        <Route path="/dashboard/admin" element={<AdminDashboard />} />
-        <Route path="/dashboard/rsm" element={<RsmDashboard />} />
-        <Route path="/dashboard/so" element={<SODashboard />} />
-        <Route path="/dashboard/logistic" element={<LogisticManagerDashboard />} />
-        <Route path="/dashboard/owner" element={<BossDashboard />} />
+
+        {/* 👇 Protected Routes */}
+        <Route
+          path="/userprofile"
+          element={
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/admin"
+          element={
+            <ProtectedRoute allowedRole="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/rsm"
+          element={
+            <ProtectedRoute allowedRole="rsm">
+              <RsmDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/so"
+          element={
+            <ProtectedRoute allowedRole="so">
+              <SODashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/logistic"
+          element={
+            <ProtectedRoute allowedRole="logistic">
+              <LogisticManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/owner"
+          element={
+            <ProtectedRoute allowedRole="owner">
+              <BossDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all route for invalid paths */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
