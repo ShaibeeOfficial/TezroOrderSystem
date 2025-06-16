@@ -9,10 +9,10 @@ import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("users");
-    const navigate = useNavigate();
-  
+  const navigate = useNavigate();
 
-   const resetAllFields = () => {
+
+  const resetAllFields = () => {
     setEmail(""); setPassword(""); setRole("so"); setName(""); setReportsTo(""); setStatus("");
     setPartyCode(""); setPartyName(""); setPartyLocation(""); setPartyPhone(""); setAssignedSoUid(""); setPartyStatus("");
     setProductName(""); setProductCategory("Vegetables"); setPackSize(""); setVariety(""); setPackType(""); setProductStatus("");
@@ -155,34 +155,29 @@ const AdminDashboard = () => {
 
   // Fetch Sales Officers and RSM users for dropdowns
   const fetchUsers = async () => {
-    try {
-      const soQuery = query(collection(db, "users"), where("role", "==", "so"));
-      const rsmQuery = query(collection(db, "users"), where("role", "==", "rsm"));
+  try {
+    const rolesToFetch = ["so", "rsm", "factoryprocgm", "khanpursale"];
 
-      const [soSnapshot, rsmSnapshot] = await Promise.all([
-        getDocs(soQuery),
-        getDocs(rsmQuery),
-      ]);
+    const queries = await Promise.all(
+      rolesToFetch.map((role) =>
+        getDocs(query(collection(db, "users"), where("role", "==", role)))
+      )
+    );
 
-      const fetchedSOs = soSnapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
-      const fetchedRSMs = rsmSnapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
+    const allUsers = queries.flatMap((snapshot) =>
+      snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
+    );
 
-      console.log("Fetched SOs:", fetchedSOs);
-      console.log("Fetched RSMs:", fetchedRSMs);
+    setSalesOfficers(allUsers.filter((user) =>
+      ["so", "factoryprocgm", "khanpursale"].includes(user.role)
+    ));
+    setRsmUsers(allUsers.filter((user) => user.role === "rsm"));
 
-      setSalesOfficers(fetchedSOs);
-      setRsmUsers(fetchedRSMs);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+  }
+};
 
-      if (fetchedSOs.length === 0) {
-        console.warn("No Sales Officers found. Check your Firestore users collection for role 'so'.");
-      }
-      if (fetchedRSMs.length === 0) {
-        console.warn("No RSM users found. Check your Firestore users collection for role 'rsm'.");
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
 
   useEffect(() => {
     fetchUsers();
@@ -191,12 +186,12 @@ const AdminDashboard = () => {
   return (
     <div className={styles.adminContainer}>
       <div className={styles.logoutBtn}>
-      <h2 className={styles.title}>Admin Dashboard</h2>
+        <h2 className={styles.title}>Admin Dashboard</h2>
 
-      <button className={styles.Btn} onClick={async () => {
-                  await auth.signOut();
-                  navigate("/");
-                }}>Logout</button>
+        <button className={styles.Btn} onClick={async () => {
+          await auth.signOut();
+          navigate("/");
+        }}>Logout</button>
       </div>
 
       <div className={styles.cardContainer}>
@@ -256,6 +251,8 @@ const AdminDashboard = () => {
                 <option value="logistic">Logistic Manager</option>
                 <option value="owner">Company Owner</option>
                 <option value="admin">Admin</option>
+                <option value="factoryprocgm">Factory Procurement GM</option>
+                <option value="khanpursale">Khanpur Sale Point</option>
               </select>
 
               {role === "so" && (
@@ -329,7 +326,7 @@ const AdminDashboard = () => {
                 className={styles.select}
                 required
               >
-                <option value="">Select Sales Officer</option>
+                <option value="">Assign To (SO / Factory / Khanpur)</option>
                 {salesOfficers.length === 0 ? (
                   <option disabled>No Sales Officers found</option>
                 ) : (

@@ -7,6 +7,7 @@ import SODashboard from "./pages/dashboard/SODashboard";
 import UserProfile from "./components/UserProfile";
 import LogisticManagerDashboard from "./pages/dashboard/LogisticManagerDashboard";
 import BossDashboard from "./pages/dashboard/BossDashboard";
+import DirectOrderDashboard from "./pages/dashboard/DirectOrderDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -63,6 +64,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="owner">
               <BossDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/direct"
+          element={
+            <ProtectedRoute allowedRole={["factoryprocgm", "khanpursale"]}>
+              <DirectOrderDashboard />
             </ProtectedRoute>
           }
         />

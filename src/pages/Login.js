@@ -46,6 +46,10 @@ const Login = () => {
           case "owner":
             navigate("/dashboard/owner");
             break;
+          case "factoryprocgm":
+          case "khanpursale":
+            navigate("/dashboard/direct");
+            break;
           default:
             navigate("/dashboard");
         }
@@ -58,6 +62,7 @@ const Login = () => {
       setLoading(false);
     }
   };
+
 
   return (
     <div className={styles.loginPage}>
