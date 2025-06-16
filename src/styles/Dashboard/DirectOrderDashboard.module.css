@@ -73,8 +73,9 @@
 
 .nameView {
   display: flex;
-  /* justify-content: center; */
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  /* align-items: center; */
 }
 
 /* Table responsiveness */
@@ -172,6 +173,15 @@
   padding: 6px 8px;
   font-size: 14px;
 }
+
+.userDetailsDesktop {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
+}
+
 
 /* Responsive tweaks */
 @media (max-width: 768px) {
