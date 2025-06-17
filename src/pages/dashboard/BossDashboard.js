@@ -401,9 +401,14 @@ const BossDashboard = () => {
                         : "Rs. 0"}
                   </td>
                   <td>
-                    <em>{order.commitmentOfPayment || ''}</em>
+                    <em>{order.commitmentOfPayment || order.commitmentMessage || ''}</em>
                     <br />
-                    {order.commitmentDate?.toDate ? format(order.commitmentDate.toDate(), 'yyyy-MM-dd') : 'N/A'}
+                    {order.commitmentDate
+                      ? (order.commitmentDate.toDate
+                        ? format(order.commitmentDate.toDate(), 'dd-MM-yyyy')
+                        : format(new Date(order.commitmentDate), 'dd-MM-yyyy')
+                      )
+                      : 'N/A'}
                   </td>
                   <td>{order.status}</td>
                   <td>

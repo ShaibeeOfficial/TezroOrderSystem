@@ -263,7 +263,7 @@ const LogisticManagerDashboard = () => {
 
   const formatDate = (timestamp) => {
     if (!timestamp?.toDate) return '-';
-    return format(timestamp.toDate(), 'HH:mm yyyy-MM-dd');
+    return format(timestamp.toDate(), 'HH:mm dd-MM-yyyy');
   };
 
   const totalPages = Math.ceil(filteredOrders.length / ORDERS_PER_PAGE);
@@ -408,9 +408,9 @@ const LogisticManagerDashboard = () => {
                           />
                         </td>
                         <td>{formatDate(order.createdAt)}</td>
-                        <td>{order.soName || '-'}</td>
-                        <td>{order.rsmName || '-'}</td>
-                        <td>{order.partyCode || '-'}</td>
+                        <td>{order.soName || 'N/A'}</td>
+                        <td>{order.rsmName || 'N/A'}</td>
+                        <td>{order.partyCode || 'N/A'}</td>
                         <td>{order.partyName}</td>
                         <td>{order.pod}</td>
                         <td>
@@ -493,7 +493,7 @@ const LogisticManagerDashboard = () => {
                                           handleProductChange(order.id, i, 'debit', e.target.value)
                                         }
                                       />
-                                    ) : product.debit || '-'}
+                                    ) : product.debit || 'N/A'}
                                   </td>
                                   <td>
                                     {["BM/RSM Submitted", "Placed"].includes(order.status) ? (
@@ -504,7 +504,7 @@ const LogisticManagerDashboard = () => {
                                           handleProductChange(order.id, i, 'credit', e.target.value)
                                         }
                                       />
-                                    ) : product.credit || '-'}
+                                    ) : product.credit || 'N/A'}
                                   </td>
                                   <td>
                                     {["BM/RSM Submitted", "Placed"].includes(order.status) && (
@@ -531,9 +531,14 @@ const LogisticManagerDashboard = () => {
                           )}
                         </td>
                         <td>
-                          <em>{order.commitmentOfPayment || ''}</em>
+                          <em>{order.commitmentOfPayment || order.commitmentMessage ||''}</em>
                           <br />
-                          {order.commitmentDate?.toDate ? format(order.commitmentDate.toDate(), 'yyyy-MM-dd') : 'N/A'}
+                          {order.commitmentDate
+                            ? (order.commitmentDate.toDate
+                              ? format(order.commitmentDate.toDate(), 'dd-MM-yyyy')
+                              : format(new Date(order.commitmentDate), 'dd-MM-yyyy')
+                            )
+                            : 'N/A'}
                         </td>
                         <td>{order.status}</td>
                         <td>

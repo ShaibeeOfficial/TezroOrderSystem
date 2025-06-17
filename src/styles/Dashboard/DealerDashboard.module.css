@@ -1,0 +1,277 @@
+.dashboardContainer {
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f6f8;
+}
+
+.sidebar {
+    width: 240px;
+    background-color: #1e1e2f;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.sidebar p {
+    font-size: 18px;
+    color: #ffffff;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.sidebar button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+}
+
+.sidebar button:hover {
+    background-color: #333;
+}
+
+.nameText {
+    color: #fff;
+    font-size: 1rem;
+}
+
+.activeTab {
+    background-color: #333;
+}
+
+.logoutButton {
+    margin-top: auto;
+    background-color: #c0392b;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.mainContent {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f8f4f4;
+}
+
+.formSection {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.inputField {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.productRow {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.removeBtn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.removeBtn:hover {
+    background-color: #b33c2f;
+}
+
+.addBtn {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    margin-top: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.addBtn:hover {
+    background-color: #2b7bb1;
+}
+
+.submitBtn {
+    background-color: #2ecc71;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    margin-top: 16px;
+    margin-left: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.submitBtn:hover {
+    background-color: #27ac5e;
+}
+
+.resetBtn {
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.resetBtn:hover {
+    background-color: #e0a800;
+}
+
+.filterContainer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.filterContainer input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.ordersTable {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ordersTable th,
+.ordersTable td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.ordersTable th {
+    background-color: #f0f0f0;
+}
+
+.responsiveTable {
+    overflow-x: auto;
+}
+
+.mobileHeader {
+    display: none;
+}
+
+.hamburger {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .dashboardContainer {
+        flex-direction: column;
+        position: relative;
+    }
+
+    .sidebar {
+        display: none;
+        width: 100%;
+        position: absolute;
+        z-index: 1000;
+        height: auto;
+        top: 100px;
+        left: 0;
+        background-color: #1e1e2f;
+        padding: 15px;
+        align-items: center;
+    }
+
+    .showSidebar {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mobileHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background-color: #1e1e2f;
+        color: white;
+    }
+
+    .productRow {
+        flex-direction: column;
+    }
+
+    .inputField {
+        margin-bottom: 10px;
+    }
+
+    .addBtn {
+        margin-left: 0;
+    }
+
+    .showSidebar h2 {
+        display: none;
+    }
+    .showSidebar p {
+        display: none;
+    }
+
+    .ordersTable, .ordersTable thead, .ordersTable tbody, .ordersTable th, .ordersTable td, .ordersTable tr {
+        display: block;
+        width: 100%;
+    }
+
+    .ordersTable thead {
+        display: none;
+    }
+
+    .ordersTable tr {
+        margin-bottom: 20px;
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .ordersTable td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: none;
+        position: relative;
+    }
+
+    .ordersTable td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 6px;
+    }
+}

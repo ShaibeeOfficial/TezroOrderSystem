@@ -252,7 +252,7 @@ const AdminDashboard = () => {
                 <option value="owner">Company Owner</option>
                 <option value="admin">Admin</option>
                 <option value="factoryprocgm">Factory Procurement GM</option>
-                <option value="khanpursale">Khanpur Sale Point</option>
+                {/* <option value="khanpursale">Khanpur Sale Point</option> */}
               </select>
 
               {role === "so" && (

@@ -8,6 +8,7 @@ import UserProfile from "./components/UserProfile";
 import LogisticManagerDashboard from "./pages/dashboard/LogisticManagerDashboard";
 import BossDashboard from "./pages/dashboard/BossDashboard";
 import DirectOrderDashboard from "./pages/dashboard/DirectOrderDashboard";
+import DealerDashboard from "./pages/dashboard/DealerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
@@ -64,6 +65,14 @@ function App() {
           element={
             <ProtectedRoute allowedRole="owner">
               <BossDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/dealer"
+          element={
+            <ProtectedRoute allowedRole="dealer">
+              <DealerDashboard />
             </ProtectedRoute>
           }
         />

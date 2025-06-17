@@ -209,4 +209,8 @@
   .mobileHeader {
     display: flex;
   }
+
+  .nameView {
+    display: none;
+  }
 }

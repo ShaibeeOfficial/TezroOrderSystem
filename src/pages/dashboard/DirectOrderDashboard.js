@@ -243,10 +243,10 @@ const DirectOrderDashboard = () => {
                     <h2>Factory Dashboard</h2>
                     <p className={styles.userDetailsDesktop}>{userName}</p>
                 </div>
-                <button onClick={() => setActiveTab("placeOrder")} className={activeTab === "placeOrder" ? styles.activeTab : ""}>
+                <button onClick={() => {setActiveTab("placeOrder"); setSidebarOpen(false)}} className={activeTab === "placeOrder" ? styles.activeTab : ""}>
                     Place Order
                 </button>
-                <button onClick={() => setActiveTab("orders")} className={activeTab === "orders" ? styles.activeTab : ""}>
+                <button onClick={() => {setActiveTab("orders"); setSidebarOpen(false)}} className={activeTab === "orders" ? styles.activeTab : ""}>
                     View Orders
                 </button>
                 <button onClick={handleLogout} className={styles.logoutButton}>

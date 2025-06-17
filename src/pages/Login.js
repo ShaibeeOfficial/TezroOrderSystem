@@ -47,7 +47,6 @@ const Login = () => {
             navigate("/dashboard/owner");
             break;
           case "factoryprocgm":
-          case "khanpursale":
             navigate("/dashboard/direct");
             break;
           default:
