@@ -34,45 +34,55 @@ const AdminDashboard = () => {
   const [rsmUsers, setRsmUsers] = useState([]);
 
   const handleCreateUser = async (e) => {
-    e.preventDefault();
-    setStatus("");
+  e.preventDefault();
+  setStatus("");
 
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = userCredential.user.uid;
 
-      const userData = {
-        uid,
-        name,
-        email,
-        role,
-        createdAt: Timestamp.now(),
-      };
+    const userData = {
+      uid,
+      name,
+      email,
+      role,
+      createdAt: Timestamp.now(),
+    };
 
-      if (role === "so" && reportsTo) {
-        userData.reportsTo = reportsTo; // Assign RSM to SO
-      }
-
-      await setDoc(doc(db, "users", uid), userData);
-
-      setStatus("✅ User created!");
-      // Reset fields
-      setEmail("");
-      setPassword("");
-      setName("");
-      setRole("so");
-      setReportsTo("");
-      // Refresh user lists to reflect new users
-      fetchUsers();
-    } catch (error) {
-      if (error.code === "auth/email-already-in-use") {
-        setStatus("❌ This email is already registered.");
-      } else {
-        setStatus("❌ " + error.message);
-      }
-      console.error("User creation error:", error);
+    // If role is SO, add reportsTo
+    if (role === "so" && reportsTo) {
+      userData.reportsTo = reportsTo;
     }
-  };
+
+    // If role is Dealer, add partyCode
+    if (role === "dealer" && partyCode.trim()) {
+      userData.partyCode = partyCode.trim();
+    }
+
+    await setDoc(doc(db, "users", uid), userData);
+
+    setStatus("✅ User created!");
+    
+    // Reset fields
+    setEmail("");
+    setPassword("");
+    setName("");
+    setRole("so");
+    setReportsTo("");
+    setPartyCode(""); // clear Party Code input too if dealer
+
+    // Refresh user lists to reflect new users
+    fetchUsers();
+  } catch (error) {
+    if (error.code === "auth/email-already-in-use") {
+      setStatus("❌ This email is already registered.");
+    } else {
+      setStatus("❌ " + error.message);
+    }
+    console.error("User creation error:", error);
+  }
+};
+
 
   // === Add Party State ===
   const [partyCode, setPartyCode] = useState("");
@@ -155,28 +165,28 @@ const AdminDashboard = () => {
 
   // Fetch Sales Officers and RSM users for dropdowns
   const fetchUsers = async () => {
-  try {
-    const rolesToFetch = ["so", "rsm", "factoryprocgm", "khanpursale"];
+    try {
+      const rolesToFetch = ["so", "rsm", "factoryprocgm", "khanpursale"];
 
-    const queries = await Promise.all(
-      rolesToFetch.map((role) =>
-        getDocs(query(collection(db, "users"), where("role", "==", role)))
-      )
-    );
+      const queries = await Promise.all(
+        rolesToFetch.map((role) =>
+          getDocs(query(collection(db, "users"), where("role", "==", role)))
+        )
+      );
 
-    const allUsers = queries.flatMap((snapshot) =>
-      snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
-    );
+      const allUsers = queries.flatMap((snapshot) =>
+        snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }))
+      );
 
-    setSalesOfficers(allUsers.filter((user) =>
-      ["so", "factoryprocgm", "khanpursale"].includes(user.role)
-    ));
-    setRsmUsers(allUsers.filter((user) => user.role === "rsm"));
+      setSalesOfficers(allUsers.filter((user) =>
+        ["so", "factoryprocgm", "khanpursale"].includes(user.role)
+      ));
+      setRsmUsers(allUsers.filter((user) => user.role === "rsm"));
 
-  } catch (error) {
-    console.error("Error fetching users:", error);
-  }
-};
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
 
   useEffect(() => {
@@ -220,6 +230,16 @@ const AdminDashboard = () => {
           <>
             <h3>Add User</h3>
             <form onSubmit={handleCreateUser} className={styles.form}>
+              {role === "dealer" && (
+                <input
+                  type="text"
+                  placeholder="Party Code"
+                  value={partyCode}
+                  onChange={(e) => setPartyCode(e.target.value)}
+                  className={styles.input}
+                  required
+                />
+              )}
               <input
                 type="text"
                 placeholder="Full Name"
