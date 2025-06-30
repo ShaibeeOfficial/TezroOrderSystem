@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "../../styles/Dashboard/BossDashboard.module.css";
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
+import logo from "../../assets/logo.jpg"; // adjust path as needed
 
 
 
@@ -64,7 +65,10 @@ const BossDashboard = () => {
         RSM: order.rsmName,
         Code: order.partyCode,
         Party: order.partyName,
+        Mobile: order.partyMobile,
         Status: order.status,
+        POD: order.pod,
+        contactInfo: order.contactInfo,
         CommitmentMessage: order.commitmentOfPayment || '',
         CommitmentDate: order.commitmentDate?.toDate?.().toISOString().split('T')[0] || '',
         Products: products.map(p => p.name || '').join('\n'),
@@ -231,7 +235,14 @@ const BossDashboard = () => {
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1>C.E.O Dashboard</h1>
+          <div className={styles.logoContainer}>
+            <img
+              src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+              alt="Logo"
+              className={styles.logo}
+            />
+            <h2>Dashboard</h2>
+          </div>
           {userName && <p className={styles.welcome}>Welcome {userName} Sir</p>}
         </div>
         <button
@@ -351,7 +362,9 @@ const BossDashboard = () => {
                 <th>BM/RSM</th>
                 <th>Party Code</th>
                 <th>Party</th>
+                <th>Party Number</th>
                 <th>POD</th>
+                <th>Contact Info</th>
                 <th>Balance</th>
                 <th>Commitment</th>
                 <th>Status</th>
@@ -389,10 +402,12 @@ const BossDashboard = () => {
                       : "N/A"}
                   </td>
                   <td>{order.soName}</td>
-                  <td>{order.rsmName || "-"}</td>
+                  <td>{order.rsmName || "N/A"}</td>
                   <td>{order.partyCode || "N/A"}</td>
                   <td>{order.partyName}</td>
-                  <td>{order.pod}</td>
+                  <td>{order.partyMobile || 'N/A'}</td>
+                  <td>{order.pod || 'N/A'}</td>
+                  <td>{order.contactInfo || 'N/A'}</td>
                   <td>
                     {order.balance > 0
                       ? `Rs. ${order.balance} (Credit)`
@@ -432,8 +447,8 @@ const BossDashboard = () => {
                             <td>{product.name || "N/A"}</td>
                             <td>{product.variety || "N/A"}</td>
                             <td>{product.quantity || 0}</td>
-                            <td>{product.credit ? `Rs. ${product.credit}` : "-"}</td>
-                            <td>{product.debit ? `Rs. ${product.debit}` : "-"}</td>
+                            <td>{product.credit ? `Rs. ${product.credit}` : "N/A"}</td>
+                            <td>{product.debit ? `Rs. ${product.debit}` : "N/A"}</td>
                           </tr>
                         ))}
                       </tbody>

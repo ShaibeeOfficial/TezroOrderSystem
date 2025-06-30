@@ -15,6 +15,8 @@ import {
 import { FaSignOutAlt } from 'react-icons/fa';
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
+import logo from "../../assets/logo.jpg"; // adjust path as needed
+
 
 
 const ORDERS_PER_PAGE = 10;
@@ -156,7 +158,10 @@ const LogisticManagerDashboard = () => {
         SO: order.soName,
         RSM: order.rsmName,
         Party: order.partyName,
+        Mobile: order.partyMobile,
         Status: order.status,
+        POD: order.pod,
+        ContactInfo: order.contactInfo,
         CommitmentMessage: order.commitmentOfPayment || '',
         CommitmentDate: order.commitmentDate?.toDate?.().toISOString().split('T')[0] || '',
         Seasons: products.map(p => p.season || '').join('\n'),
@@ -273,7 +278,14 @@ const LogisticManagerDashboard = () => {
     <div className={styles.container}>
       <div className={styles.main}>
         <div className={styles.topbar}>
-          <h1>Logistic Manager Dashboard</h1>
+          <div className={styles.logoContainer}>
+            <img
+              src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+              alt="Logo"
+              className={styles.logo}
+            />
+            <h2>Logistic Manager Dashboard</h2>
+          </div>
           <button className={styles.logoutButton} onClick={async () => {
             await auth.signOut();
             navigate("/");
@@ -382,7 +394,9 @@ const LogisticManagerDashboard = () => {
                       <th>BM/RSM</th>
                       <th>Party Code</th> {/* 👈 Add this */}
                       <th>Party Name</th>
+                      <th>Party Number</th>
                       <th>POD</th>
+                      <th>Contact Info</th>
                       <th>Products</th>
                       <th>Commitment</th> {/* 👈 Add this */}
                       <th>Status</th>
@@ -412,7 +426,9 @@ const LogisticManagerDashboard = () => {
                         <td>{order.rsmName || 'N/A'}</td>
                         <td>{order.partyCode || 'N/A'}</td>
                         <td>{order.partyName}</td>
-                        <td>{order.pod}</td>
+                        <td>{order.partyMobile || order.phone || 'N/A'}</td>
+                        <td>{order.pod || 'N/A'}</td>
+                        <td>{order.contactInfo || 'N/A'}</td>
                         <td>
                           <table className={styles.innerTable}>
                             <thead>
@@ -531,7 +547,7 @@ const LogisticManagerDashboard = () => {
                           )}
                         </td>
                         <td>
-                          <em>{order.commitmentOfPayment || order.commitmentMessage ||''}</em>
+                          <em>{order.commitmentOfPayment || order.commitmentMessage || ''}</em>
                           <br />
                           {order.commitmentDate
                             ? (order.commitmentDate.toDate

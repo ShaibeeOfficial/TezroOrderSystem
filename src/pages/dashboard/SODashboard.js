@@ -15,10 +15,13 @@ import {
 } from "firebase/firestore";
 import styles from "../../styles/Dashboard/SODashboard.module.css";
 import { FiMenu } from "react-icons/fi";
+import logo from "../../assets/logo.jpg"; // adjust path as needed
+
 
 const SODashboard = () => {
   const [activeTab, setActiveTab] = useState("placeOrder");
   const [parties, setParties] = useState([]);
+  const [partyMobile, setPartyMobile] = useState("");
   const [pod, setPod] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedParty, setSelectedParty] = useState("");
@@ -26,6 +29,7 @@ const SODashboard = () => {
   const [rsmId, setRsmId] = useState("");
   const [rsmName, setRsmName] = useState("");
   const [soName, setSoName] = useState("");
+  const [contactInfo, setContactInfo] = useState("");
   const [orders, setOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
@@ -116,6 +120,7 @@ const SODashboard = () => {
     setSelectedParty("");
     setSelectedProducts([]);
     setPod("");
+    setContactInfo("");
   };
 
   const handleSubmitOrder = async () => {
@@ -159,9 +164,11 @@ const SODashboard = () => {
       rsmId,
       rsmName,
       createdBy: auth.currentUser.uid,
-      partyName: selectedParty,
       partyCode,
+      partyName: selectedParty,
+      partyMobile,
       pod,
+      contactInfo, // <-- Add this
       products: enrichedProducts,
       status: "Pending",
       createdAt: serverTimestamp(),
@@ -196,7 +203,9 @@ const SODashboard = () => {
             <tr>
               <th>Date</th>
               <th>Party</th>
+              <th>Party Number</th>
               <th>POD</th>
+              <th>Contact Info</th>
               <th>Status</th>
               <th>Product</th>
             </tr>
@@ -228,7 +237,9 @@ const SODashboard = () => {
                           {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}
                         </td>
                         <td rowSpan={filteredProducts.length}>{order.partyName}</td>
+                        <td rowSpan={filteredProducts.length}>{order.partyMobile}</td>
                         <td rowSpan={filteredProducts.length}>{order.pod || "N/A"}</td>
+                        <td rowSpan={filteredProducts.length}>{order.contactInfo || "N/A"}</td>
                         <td rowSpan={filteredProducts.length}>{order.status}</td>
                       </>
                     )}
@@ -248,7 +259,14 @@ const SODashboard = () => {
   return (
     <div className={styles.dashboardContainer}>
       <div className={styles.mobileHeader}>
-        <h2>T.M Dashboard</h2>
+        <div className={styles.logoContainer}>
+          <img
+            src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+            alt="Logo"
+            className={styles.logo}
+          />
+          <h2>Dashboard</h2>
+        </div>
         <p>{soName}</p>
         <button className={styles.hamburger} onClick={() => setSidebarOpen(!sidebarOpen)}>
           <FiMenu size={24} />
@@ -257,7 +275,14 @@ const SODashboard = () => {
 
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.showSidebar : ""}`}>
         <div className="nameView">
-          <h2>TM Dashboard</h2>
+          <div className={styles.logoContainer}>
+            <img
+              src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+              alt="Logo"
+              className={styles.logo}
+            />
+            <h2>Dashboard</h2>
+          </div>
           <p>{soName}</p>
         </div>
         <button onClick={() => setActiveTab("placeOrder")} className={activeTab === "placeOrder" ? styles.activeTab : ""}>
@@ -284,11 +309,20 @@ const SODashboard = () => {
                 </option>
               ))}
             </select>
+            <label>Party Phone Number</label>
+            <input type="text" value={partyMobile} onChange={(e) => setPartyMobile(e.target.value)} className={styles.inputField} placeholder="Enter Party Phone Number" />
             <label>POD</label>
             <textarea
               value={pod}
               onChange={(e) => setPod(e.target.value)}
               placeholder="Enter Your POD"
+              className={styles.partySection}
+            />
+            <label>Contact Info</label>
+            <textarea
+              value={contactInfo}
+              onChange={(e) => setContactInfo(e.target.value)}
+              placeholder="Enter Phone Number and Delivery Address"
               className={styles.partySection}
             />
             {selectedProducts.map((product, index) => (

@@ -154,7 +154,7 @@
   padding: 10px;
   border: 1px solid #050505;
   text-align: left;
-  min-width: 100px;
+  /* min-width: 50px; */
 }
 
 .innerTable {
@@ -247,6 +247,19 @@ input[type="number"] {
   box-sizing: border-box;
 }
 
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1rem 0;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
 /* Responsive Fixes */
 @media (max-width: 768px) {
   .topbar {
@@ -278,4 +291,9 @@ input[type="number"] {
   input[type="number"] {
     font-size: 0.85rem;
   }
+
+  .logoContainer h2 {
+    display: none;
+  }
+
 }

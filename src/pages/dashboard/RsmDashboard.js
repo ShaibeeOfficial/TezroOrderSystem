@@ -12,6 +12,8 @@ import {
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import styles from "../../styles/Dashboard/RsmDashboard.module.css";
+import logo from "../../assets/logo.jpg"; // adjust path as needed
+
 
 const RsmDashboard = () => {
   const [orders, setOrders] = useState([]);
@@ -175,7 +177,14 @@ const RsmDashboard = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>BM/RSM Dashboard</h1>
+         <div className={styles.logoContainer}>
+            <img
+              src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+              alt="Logo"
+              className={styles.logo}
+            />
+            <h2>BSM/RSM Dashboard</h2>
+          </div>
         <button
           onClick={async () => {
             await auth.signOut();
@@ -257,7 +266,9 @@ const RsmDashboard = () => {
                 <th>Date</th>
                 <th>T.M</th>
                 <th>Party</th>
+                <th>Party Number</th>
                 <th>POD</th>
+                <th>Contact Info</th>
                 <th>Commitment</th>
                 <th>Status</th>
                 <th>Products</th>
@@ -278,7 +289,9 @@ const RsmDashboard = () => {
                   <td>{order.createdAt?.toDate?.().toLocaleDateString() || "N/A"}</td>
                   <td>{order.soName}</td>
                   <td>{order.partyName}</td>
+                  <td>{order.phone || order.partyMobile || 'N/A'}</td>
                   <td>{order.pod}</td>
+                  <td>{order.contactInfo}</td>
                   <td>
                     {order.status === "Pending" ? (
                       <>

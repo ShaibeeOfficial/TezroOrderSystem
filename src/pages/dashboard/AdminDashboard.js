@@ -5,6 +5,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import styles from "../../styles/Dashboard/AdminDashboard.module.css";
 import { useNavigate } from "react-router-dom";
+import logo from "../../assets/logo.jpg"; // adjust path as needed
+
 
 
 const AdminDashboard = () => {
@@ -196,8 +198,14 @@ const AdminDashboard = () => {
   return (
     <div className={styles.adminContainer}>
       <div className={styles.logoutBtn}>
-        <h2 className={styles.title}>Admin Dashboard</h2>
-
+        <div className={styles.logoContainer}>
+                    <img
+                        src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+                        alt="Logo"
+                        className={styles.logo}
+                    />
+                    <h2>Admin Dashboard</h2>
+                </div>
         <button className={styles.Btn} onClick={async () => {
           await auth.signOut();
           navigate("/");

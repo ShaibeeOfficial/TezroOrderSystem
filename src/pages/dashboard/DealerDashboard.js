@@ -1,4 +1,4 @@
-// Updated DealerDashboard.js with client-side pagination
+// DealerDashboard.js
 import React, { useEffect, useState } from "react";
 import { auth, db } from "../../firebase";
 import {
@@ -14,6 +14,8 @@ import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
 import styles from "../../styles/Dashboard/DealerDashboard.module.css";
+import logo from "../../assets/logo.jpg"; // adjust path as needed
+
 
 const ORDERS_PER_PAGE = 10;
 
@@ -23,6 +25,8 @@ const DealerDashboard = () => {
     const [partyMobile, setPartyMobile] = useState("");
     const [partyCode, setPartyCode] = useState("");
     const [pod, setPod] = useState("");
+    const [contactInfo, setContactInfo] = useState("");
+    const [productList, setProductList] = useState([]);
     const [orderProducts, setOrderProducts] = useState([{ name: "", quantity: "" }]);
     const [orders, setOrders] = useState([]);
     const [filteredOrders, setFilteredOrders] = useState([]);
@@ -32,6 +36,7 @@ const DealerDashboard = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userName, setUserName] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [productOptions, setProductOptions] = useState([]); // ✅ for datalist
 
     const navigate = useNavigate();
 
@@ -47,7 +52,36 @@ const DealerDashboard = () => {
             }
         };
 
+        const fetchProductSuggestions = async () => {
+            try {
+                const snapshot = await getDocs(collection(db, "products"));
+                const names = new Set();
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if (d.name) names.add(d.name.trim());
+                });
+                setProductOptions(Array.from(names));
+            } catch (error) {
+                console.error("Error fetching product suggestions:", error);
+            }
+        };
+
         fetchUserName();
+        fetchProductSuggestions();
+    }, []);
+
+    useEffect(() => {
+        const fetchProductSuggestions = async () => {
+            try {
+                const snapshot = await getDocs(collection(db, "products"));
+                const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                setProductList(products);
+            } catch (error) {
+                console.error("Error fetching product suggestions:", error);
+            }
+        };
+
+        fetchProductSuggestions();
     }, []);
 
     const fetchOrders = async () => {
@@ -109,6 +143,7 @@ const DealerDashboard = () => {
             partyName,
             partyMobile,
             pod,
+            contactInfo,
             products: orderProducts,
             status: "Placed",
         };
@@ -124,7 +159,7 @@ const DealerDashboard = () => {
         setPartyName("");
         setPartyMobile("");
         setOrderProducts([{ name: "", quantity: "" }]);
-    }
+    };
 
 
     const renderOrders = () => (
@@ -137,6 +172,7 @@ const DealerDashboard = () => {
                             <th>Party</th>
                             <th>Mobile</th>
                             <th>POD</th>
+                            <th>Contact Info</th>
                             <th>Status</th>
                             <th>Products</th>
                         </tr>
@@ -156,6 +192,7 @@ const DealerDashboard = () => {
                                     <td>{order.partyName}</td>
                                     <td>{order.partyMobile}</td>
                                     <td>{order.pod}</td>
+                                    <td>{order.contactInfo}</td>
                                     <td>{order.status}</td>
                                     <td>
                                         {order.products?.map((p, i) => (
@@ -180,7 +217,14 @@ const DealerDashboard = () => {
         <div className={styles.dashboardContainer}>
             {/* Mobile Header */}
             <div className={styles.mobileHeader}>
-                <h2>Dealer Dashboard</h2>
+                  <div className={styles.logoContainer}>
+                    <img
+                        src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+                        alt="Logo"
+                        className={styles.logo}
+                    />
+                    <h2>Dealer</h2>
+                </div>
                 <p className={styles.nameText}>{userName}</p>
                 <button className={styles.hamburger} onClick={() => setSidebarOpen(!sidebarOpen)}>
                     <FiMenu size={24} />
@@ -189,7 +233,14 @@ const DealerDashboard = () => {
 
             {/* Sidebar */}
             <aside className={`${styles.sidebar} ${sidebarOpen ? styles.showSidebar : ""}`}>
-                <h2>Dealer</h2>
+                <div className={styles.logoContainer}>
+                    <img
+                        src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+                        alt="Logo"
+                        className={styles.logo}
+                    />
+                    <h2>Dealer</h2>
+                </div>
                 <p>{userName}</p>
                 <button onClick={() => { setActiveTab("placeOrder"); setSidebarOpen(false) }} className={activeTab === "placeOrder" ? styles.activeTab : ""}>Place Order</button>
                 <button onClick={() => { setActiveTab("viewOrders"); setSidebarOpen(false) }} className={activeTab === "viewOrders" ? styles.activeTab : ""}>View Orders</button>
@@ -202,15 +253,38 @@ const DealerDashboard = () => {
                     <div className={styles.formSection}>
                         <h3>Place New Order</h3>
                         <label>Party Name</label>
-                        <input type="text" value={partyName} onChange={(e) => setPartyName(e.target.value)} className={styles.inputField}  placeholder="Enter Party Name" />
+                        <input type="text" value={partyName} onChange={(e) => setPartyName(e.target.value)} className={styles.inputField} placeholder="Enter Party Name" />
                         <label>Party Phone Number</label>
                         <input type="text" value={partyMobile} onChange={(e) => setPartyMobile(e.target.value)} className={styles.inputField} placeholder="Enter Party Phone Number" />
                         <label>POD</label>
-                        <textarea value={pod} onChange={(e) => setPod(e.target.value)} className={styles.inputField} placeholder="Enter POD"/>
+                        <textarea value={pod} onChange={(e) => setPod(e.target.value)} className={styles.inputField} placeholder="Enter POD" />
+                        <label>Contact Info</label>
+                        <textarea value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} className={styles.inputField} placeholder="Enter Phone Number and Delivery Address" />
                         {orderProducts.map((product, index) => (
                             <div key={index} className={styles.productRow}>
                                 <label>Product Name</label>
-                                <input type="text" placeholder="Product Name" value={product.name} onChange={(e) => setOrderProducts(orderProducts.map((p, i) => i === index ? { ...p, name: e.target.value } : p))} className={styles.inputField} />
+                                <input
+                                    type="text"
+                                    list="product-suggestions"
+                                    placeholder="Product Name"
+                                    value={product.name}
+                                    onChange={(e) => {
+                                        const name = e.target.value;
+                                        const matched = productList.find(p => p.name.toLowerCase() === name.toLowerCase());
+                                        setOrderProducts(orderProducts.map((p, i) =>
+                                            i === index ? {
+                                                ...p,
+                                                name,
+                                                ...(matched ? {
+                                                    productId: matched.id,
+                                                    category: matched.category || "",
+                                                    price: matched.price || "",
+                                                } : {})
+                                            } : p
+                                        ));
+                                    }}
+                                    className={styles.inputField}
+                                />
                                 <label>Product Quantity</label>
                                 <input type="number" placeholder="Quantity" value={product.quantity} onChange={(e) => setOrderProducts(orderProducts.map((p, i) => i === index ? { ...p, quantity: e.target.value } : p))} className={styles.inputField} />
                                 <button onClick={() => setOrderProducts(orderProducts.filter((_, i) => i !== index))} className={styles.removeBtn}>Remove</button>
@@ -219,6 +293,11 @@ const DealerDashboard = () => {
                         <button onClick={() => setOrderProducts([...orderProducts, { name: "", quantity: "" }])} className={styles.addBtn}>+ Add Product</button>
                         <button onClick={handleSubmitOrder} className={styles.submitBtn}>Submit Order</button>
                         <button onClick={resetOrderForm} className={styles.resetBtn}>Reset Order</button>
+                        <datalist id="product-suggestions">
+                            {productOptions.map((opt, idx) => (
+                                <option key={idx} value={opt} />
+                            ))}
+                        </datalist>
                     </div>
                 )}
                 {activeTab === "viewOrders" && (
