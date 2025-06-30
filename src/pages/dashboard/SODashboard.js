@@ -119,6 +119,7 @@ const SODashboard = () => {
   const resetOrderForm = () => {
     setSelectedParty("");
     setSelectedProducts([]);
+    setContactInfo("");
     setPod("");
     setContactInfo("");
   };
