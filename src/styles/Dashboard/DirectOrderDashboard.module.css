@@ -1,216 +1,296 @@
 .dashboardContainer {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
+    display: flex;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f6f8;
 }
 
-/* Sidebar */
 .sidebar {
-  width: 220px;
-  background: #2c3e50;
-  color: #fff;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  transition: transform 0.3s ease-in-out;
+    width: 240px;
+    background-color: #1e1e2f;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h2 {
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.sidebar p {
+    font-size: 18px;
+    color: #ffffff;
+    margin-bottom: 20px;
+    font-weight: bold;
 }
 
 .sidebar button {
-  margin: 10px 0;
-  padding: 12px;
-  background: none;
-  border: 1px solid #ecf0f1;
-  color: #fff;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background 0.2s;
+    background: none;
+    border: none;
+    color: white;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.3s ease;
 }
 
 .sidebar button:hover {
-  background: #34495e;
+    background-color: #333;
 }
 
-.logoutButton {
-  margin-top: auto;
-  background: #c0392b;
+.nameText {
+    color: #fff;
+    font-size: 1rem;
 }
 
 .activeTab {
-  background: #1abc9c;
-  border-color: #1abc9c;
+    background-color: #333;
 }
 
-/* Main content */
+.logoutButton {
+    margin-top: auto;
+    background-color: #c0392b;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
 .mainContent {
-  flex: 1;
-  padding: 20px;
-  height: 100vh;
-  overflow-y: auto;
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f8f4f4;
 }
 
-/* Mobile Header */
-.mobileHeader {
-  display: none;
-  background: #2c3e50;
-  color: #fff;
-  padding: 10px 20px;
-  align-items: center;
-  justify-content: space-between;
+.formSection {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.mobileHeader h2 {
-  margin: 0;
+.inputField {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
 
-.hamburger {
-  display: flex;
-  background: none;
-  border: none;
-  color: #fff;
-  cursor: pointer;
+.productRow {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
 }
 
-.nameView {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  /* align-items: center; */
+.removeBtn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-/* Table responsiveness */
-.responsiveTable {
-  overflow-x: auto;
+.removeBtn:hover {
+    background-color: #b33c2f;
+}
+
+.addBtn {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    margin-top: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.addBtn:hover {
+    background-color: #2b7bb1;
+}
+
+.submitBtn {
+    background-color: #2ecc71;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    margin-top: 16px;
+    margin-left: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.submitBtn:hover {
+    background-color: #27ac5e;
+}
+
+.resetBtn {
+    background-color: #ffc107;
+    color: #000;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.resetBtn:hover {
+    background-color: #e0a800;
+}
+
+.filterContainer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.filterContainer input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
 
 .ordersTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .ordersTable th,
 .ordersTable td {
-  padding: 10px;
-  border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 
 .ordersTable th {
-  background: #f4f4f4;
+    background-color: #f0f0f0;
 }
 
-/* Forms */
-.formSection {
-  max-width: 600px;
+.responsiveTable {
+    overflow-x: auto;
 }
 
-.partySection,
-.productSelect,
-.qtyInput {
-  width: 100%;
-  padding: 8px 12px;
-  margin-bottom: 10px;
-  margin-top: 10px;
-  font-size: 1rem;
-}
-
-.productRow {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.qtyInput {
-  width: 80px;
-  padding: 8px 12px;
-}
-
-.removeBtn {
-  background: #e74c3c;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.productBtn {
-  padding: 10px 20px;
-}
-
-.actionButtons {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-}
-
-.submitBtn {
-  background: #1abc9c;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-.cancelBtn {
-  background: #bdc3c7;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-/* Filter */
-.filterContainer {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.filterContainer select,
-.filterContainer input {
-  padding: 6px 8px;
-  font-size: 14px;
-}
-
-.userDetailsDesktop {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  display: block;
-}
-
-
-/* Responsive tweaks */
-@media (max-width: 768px) {
-  .dashboardContainer {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    transform: translateX(-100%);
-    z-index: 1000;
-  }
-
-  .showSidebar {
-    transform: translateX(0);
-  }
-
-  .mainContent {
-    padding: 10px;
-  }
-
-  .mobileHeader {
-    display: flex;
-  }
-
-  .nameView {
+.mobileHeader {
     display: none;
-  }
+}
+
+.hamburger {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1rem 0;
+}
+
+.logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+    .dashboardContainer {
+        flex-direction: column;
+        position: relative;
+    }
+
+    .sidebar {
+        display: none;
+        width: 100%;
+        position: absolute;
+        z-index: 1000;
+        height: auto;
+        top: 100px;
+        left: 0;
+        background-color: #1e1e2f;
+        padding: 15px;
+        align-items: center;
+    }
+
+    .showSidebar {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mobileHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        background-color: #1e1e2f;
+        color: white;
+    }
+
+    .logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+    }
+
+    .productRow {
+        flex-direction: column;
+    }
+
+    .inputField {
+        margin-bottom: 10px;
+    }
+
+    .addBtn {
+        margin-left: 0;
+    }
+
+    .showSidebar h2 {
+        display: none;
+    }
+    .showSidebar p {
+        display: none;
+    }
+
+    .ordersTable, .ordersTable thead, .ordersTable tbody, .ordersTable th, .ordersTable td, .ordersTable tr {
+        display: block;
+        width: 100%;
+    }
+
+    .ordersTable thead {
+        display: none;
+    }
+
+    .ordersTable tr {
+        margin-bottom: 20px;
+        border-radius: 10px;
+        background: #fff;
+        padding: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .ordersTable td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: none;
+        position: relative;
+    }
+
+    .ordersTable td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 6px;
+    }
 }

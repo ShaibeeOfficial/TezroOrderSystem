@@ -105,6 +105,16 @@
   margin-top: 10px;
 }
 
+.revertButton {
+  background-color: #3cd3e7;
+  color: white;
+  border: none;
+  padding: 6px 30px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
 .logoContainer {
   display: flex;
   align-items: center;

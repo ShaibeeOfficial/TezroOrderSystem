@@ -16,6 +16,8 @@ import styles from "../../styles/Dashboard/BossDashboard.module.css";
 import { format } from 'date-fns';
 import * as XLSX from 'xlsx';
 import logo from "../../assets/logo.jpg"; // adjust path as needed
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 
 
@@ -53,6 +55,160 @@ const BossDashboard = () => {
   //     return format(timestamp.toDate(), 'HH:mm yyyy-MM-dd');
   //   };
 
+  const handleExportPDF = async () => {
+  const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
+  const doc = new jsPDF();
+
+  const logoData = await toDataURL(logo); // full-color logo for top
+  const watermarkData = await toDataURLWithOpacity(logo, 0.05); // transparent watermark
+
+  selectedOrders.forEach((order, index) => {
+    if (index > 0) doc.addPage();
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const centerX = pageWidth / 2;
+
+    // 💧 Add faded watermark behind content
+    doc.addImage(
+      watermarkData,
+      "PNG", // must be PNG to preserve transparency
+      centerX - 50,
+      pageHeight / 2 - 50,
+      100,
+      100
+    );
+
+    // 🖼️ Add full-color logo + title at the top
+    doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18); // smaller logo
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("TEZRO SEED PVT LTD", centerX + 5, 22, { align: "center" });
+    doc.setFontSize(11);
+
+    let y = 38;
+    const labelWidth = 50;
+    const valueWidth = 130;
+
+    const drawField = (label, value) => {
+      const wrapped = doc.splitTextToSize(value || "N/A", valueWidth);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${label}:`, 14, y);
+      doc.setFont("helvetica", "normal");
+      doc.text(wrapped, 14 + labelWidth, y);
+      y += wrapped.length * 6 + 2;
+    };
+
+    drawField("Order Ref", order.refCode || "N/A");
+    drawField("Order Placed By", order.soName);
+    drawField("BM / RSM", order.rsmName || "N/A");
+    drawField("Party Code", order.partyCode || "N/A");
+    drawField("Party Name", order.partyName || "N/A");
+    drawField("Party Mobile", order.partyMobile || "N/A");
+    drawField("Status", order.status || "N/A");
+    drawField("POD", order.pod || "N/A");
+    drawField("Contact Info", order.contactInfo || "N/A");
+    drawField("Commitment Message", order.commitmentOfPayment || order.commitmentMessage || "N/A");
+
+    const commitmentDate = order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A";
+    drawField("Commitment Date", commitmentDate);
+
+    const balanceText =
+      order.balance > 0
+        ? `Rs. ${order.balance} (Credit)`
+        : order.balance < 0
+        ? `Rs. ${Math.abs(order.balance)} (Debit)`
+        : "Rs. 0";
+    drawField("Balance", balanceText);
+
+    const tableBody = (order.products || []).map(product => [
+      product.season || "N/A",
+      product.category || "N/A",
+      product.name || "N/A",
+      product.variety || "N/A",
+      product.quantity?.toString() || "0",
+      product.credit ? `Rs. ${product.credit}` : "0",
+      product.debit ? `Rs. ${product.debit}` : "0"
+    ]);
+
+    autoTable(doc, {
+      startY: y + 5,
+      head: [["Season", "Category", "Product", "Variety", "Qty", "Credit", "Debit"]],
+      body: tableBody,
+      theme: "grid",
+      styles: {
+        fontSize: 10,
+        cellPadding: 3,
+        overflow: 'linebreak',
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [22, 160, 133],
+        textColor: 255,
+        halign: 'center'
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 30 },
+        4: { cellWidth: 15 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 },
+      }
+    });
+  });
+
+  doc.save("Order_List.pdf");
+};
+
+
+
+  function toDataURLWithOpacity(url, opacity = 0.05) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.src = url;
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+
+      // Clear canvas to support transparency
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Set global alpha for opacity
+      ctx.globalAlpha = opacity;
+      ctx.drawImage(img, 0, 0);
+
+      resolve(canvas.toDataURL("image/png")); // use PNG for transparency
+    };
+    img.onerror = reject;
+  });
+}
+
+
+  // 📌 Helper: Convert image to base64
+  function toDataURL(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg"));
+      };
+      img.onerror = reject;
+    });
+  }
+
+
+
   const handleExportSelected = () => {
     const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
 
@@ -62,11 +218,11 @@ const BossDashboard = () => {
       return {
         OrderDate: order.createdAt?.toDate?.().toLocaleDateString('en-GB') || '',
         SO: order.soName,
-        RSM: order.rsmName,
-        Code: order.partyCode,
-        Party: order.partyName,
+        ApprovedBy: order.rsmName,
+        PartyCode: order.partyCode,
+        PartyName: order.partyName,
         Mobile: order.partyMobile,
-        Status: order.status,
+        OrderStatus: order.status,
         POD: order.pod,
         contactInfo: order.contactInfo,
         CommitmentMessage: order.commitmentOfPayment || '',
@@ -77,7 +233,8 @@ const BossDashboard = () => {
         Categories: products.map(p => p.category || '').join('\n'),
         Quantities: products.map(p => p.quantity ?? '').join('\n'),
         Debits: products.map(p => p.debit ?? '').join('\n'),
-        Credits: products.map(p => p.credit ?? '').join('\n')
+        Credits: products.map(p => p.credit ?? '').join('\n'),
+        Balance: order.Balance,
       };
     });
 
@@ -225,6 +382,14 @@ const BossDashboard = () => {
     fetchOrders();
   };
 
+  const handleRevert = async (orderId) => {
+    const orderRef = doc(db, 'orders', orderId);
+    await updateDoc(orderRef, {
+      status: 'Logistic Reviewed',
+    });
+    await fetchOrders();
+  };
+
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const paginatedOrders = filteredOrders.slice(
     (currentPage - 1) * ordersPerPage,
@@ -325,6 +490,13 @@ const BossDashboard = () => {
         >
           📤 Export
         </button>
+        <button
+          onClick={handleExportPDF}
+          disabled={selectedOrderIds.length === 0}
+          className={styles.exportButton}
+        >
+          📝 Export PDF
+        </button>
       </div>
 
       {isLoading ? (
@@ -358,17 +530,17 @@ const BossDashboard = () => {
                   }}
                 />Select</th>
                 <th>Date</th>
-                <th>T.M</th>
+                <th>Order Placed By</th>
                 <th>BM/RSM</th>
                 <th>Party Code</th>
                 <th>Party</th>
                 <th>Party Number</th>
                 <th>POD</th>
                 <th>Contact Info</th>
-                <th>Balance</th>
                 <th>Commitment</th>
                 <th>Status</th>
                 <th>Products</th>
+                <th>Balance</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -384,6 +556,7 @@ const BossDashboard = () => {
                         : ""
                   }
                 >
+                  {/* chechbox table data  */}
                   <td>
                     <input
                       type="checkbox"
@@ -396,6 +569,7 @@ const BossDashboard = () => {
                       }}
                     />
                   </td>
+                  {/* Date Column data*/}
                   <td>
                     {order.createdAt?.toDate
                       ? order.createdAt.toDate().toLocaleDateString()
@@ -408,13 +582,6 @@ const BossDashboard = () => {
                   <td>{order.partyMobile || 'N/A'}</td>
                   <td>{order.pod || 'N/A'}</td>
                   <td>{order.contactInfo || 'N/A'}</td>
-                  <td>
-                    {order.balance > 0
-                      ? `Rs. ${order.balance} (Credit)`
-                      : order.balance < 0
-                        ? `Rs. ${Math.abs(order.balance)} (Debit)`
-                        : "Rs. 0"}
-                  </td>
                   <td>
                     <em>{order.commitmentOfPayment || order.commitmentMessage || ''}</em>
                     <br />
@@ -447,12 +614,19 @@ const BossDashboard = () => {
                             <td>{product.name || "N/A"}</td>
                             <td>{product.variety || "N/A"}</td>
                             <td>{product.quantity || 0}</td>
-                            <td>{product.credit ? `Rs. ${product.credit}` : "N/A"}</td>
-                            <td>{product.debit ? `Rs. ${product.debit}` : "N/A"}</td>
+                            <td>{product.credit ? `Rs. ${product.credit}` : "0"}</td>
+                            <td>{product.debit ? `Rs. ${product.debit}` : "0"}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                  </td>
+                  <td>
+                    {order.balance > 0
+                      ? `Rs. ${order.balance} (Credit)`
+                      : order.balance < 0
+                        ? `Rs. ${Math.abs(order.balance)} (Debit)`
+                        : "Rs. 0"}
                   </td>
                   <td>
                     {order.status === "Logistic Reviewed" && (
@@ -468,6 +642,12 @@ const BossDashboard = () => {
                           onClick={() => handleReject(order.id)}
                         >
                           Reject
+                        </button>
+                        <button 
+                        className={styles.revertButton} 
+                        onClick={() => handleRevert(order.id)}
+                        >
+                          Revert
                         </button>
                       </>
                     )}

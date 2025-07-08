@@ -16,7 +16,8 @@ import {
 import styles from "../../styles/Dashboard/SODashboard.module.css";
 import { FiMenu } from "react-icons/fi";
 import logo from "../../assets/logo.jpg"; // adjust path as needed
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const SODashboard = () => {
   const [activeTab, setActiveTab] = useState("placeOrder");
@@ -38,6 +39,7 @@ const SODashboard = () => {
   const [filterEndDate, setFilterEndDate] = useState("");
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false); // 🔒 Double submit protection
 
   const navigate = useNavigate();
 
@@ -79,7 +81,6 @@ const SODashboard = () => {
         const querySnapshot = await getDocs(ordersQuery);
         const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Sort by createdAt descending
         const sorted = ordersData.sort((a, b) => {
           const dateA = a.createdAt?.toDate?.() || new Date(0);
           const dateB = b.createdAt?.toDate?.() || new Date(0);
@@ -119,20 +120,51 @@ const SODashboard = () => {
   const resetOrderForm = () => {
     setSelectedParty("");
     setSelectedProducts([]);
-    setPartyMobile("")
+    setPartyMobile("");
     setPod("");
     setContactInfo("");
   };
 
   const handleSubmitOrder = async () => {
-    if (!selectedParty || selectedProducts.length === 0) {
-      alert("Please select a party and at least one product.");
+    if (submitting) return;
+
+    // Validate form
+    if (!selectedParty) {
+      toast.error("Please select a party.");
+      return;
+    }
+
+    if (!partyMobile.trim()) {
+      toast.error("Please enter the party phone number.");
+      return;
+    }
+
+    if (!pod.trim()) {
+      toast.error("Please enter the POD.");
+      return;
+    }
+
+    if (!contactInfo.trim()) {
+      toast.error("Please enter contact info.");
+      return;
+    }
+
+    if (selectedProducts.length === 0) {
+      toast.error("Please add at least one product.");
+      return;
+    }
+
+    const incompleteProduct = selectedProducts.find(
+      (p) => !p.productId || !p.quantity || parseInt(p.quantity) <= 0
+    );
+
+    if (incompleteProduct) {
+      toast.error("Please Enter Valid Quantity");
       return;
     }
 
     const selectedPartyObj = parties.find(p => p.name === selectedParty);
     const partyCode = selectedPartyObj?.code || "N/A";
-
     const refCode = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
 
     const enrichedProducts = selectedProducts.map(p => {
@@ -165,22 +197,27 @@ const SODashboard = () => {
       rsmId,
       rsmName,
       createdBy: auth.currentUser.uid,
+      createdByName: soName,
       partyCode,
       partyName: selectedParty,
       partyMobile,
       pod,
-      contactInfo, // <-- Add this
+      contactInfo,
       products: enrichedProducts,
       status: "Pending",
       createdAt: serverTimestamp(),
     };
 
     try {
+      setSubmitting(true);
       await addDoc(collection(db, "orders"), order);
-      alert("Order placed successfully!");
+      toast.success("Order placed successfully!");
       resetOrderForm();
     } catch (err) {
       console.error("Failed to place order:", err);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -217,7 +254,7 @@ const SODashboard = () => {
               const rowStyle =
                 order.status === "Approved"
                   ? { backgroundColor: "#d4edda" }
-                  : order.status === "Rejected"
+                  : order.status === "Rejected" || order.status === "Rejected By BM/RSM" || order.status === "Rejected By Logistic"
                     ? { backgroundColor: "#f8d7da" }
                     : {};
 
@@ -225,9 +262,8 @@ const SODashboard = () => {
                 <tr key={order.id} style={rowStyle}>
                   <td>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}</td>
                   <td>{order.partyName}</td>
-                  {/* <td>{order.pod}</td> */}
                   <td>{order.status}</td>
-                  <td>N/A</td>
+                  <td>{order.pod || 'N/A'}</td>
                 </tr>
               ) : (
                 filteredProducts.map((product, idx) => (
@@ -259,13 +295,10 @@ const SODashboard = () => {
 
   return (
     <div className={styles.dashboardContainer}>
+      <ToastContainer position="top-center" />
       <div className={styles.mobileHeader}>
         <div className={styles.logoContainer}>
-          <img
-            src={logo || "/logo.png"} // use imported logo if available, fallback to public path
-            alt="Logo"
-            className={styles.logo}
-          />
+          <img src={logo || "/logo.png"} alt="Logo" className={styles.logo} />
           <h2>Dashboard</h2>
         </div>
         <p>{soName}</p>
@@ -277,24 +310,14 @@ const SODashboard = () => {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.showSidebar : ""}`}>
         <div className="nameView">
           <div className={styles.logoContainer}>
-            <img
-              src={logo || "/logo.png"} // use imported logo if available, fallback to public path
-              alt="Logo"
-              className={styles.logo}
-            />
+            <img src={logo || "/logo.png"} alt="Logo" className={styles.logo} />
             <h2>Dashboard</h2>
           </div>
           <p>{soName}</p>
         </div>
-        <button onClick={() => setActiveTab("placeOrder")} className={activeTab === "placeOrder" ? styles.activeTab : ""}>
-          Place Order
-        </button>
-        <button onClick={() => setActiveTab("orders")} className={activeTab === "orders" ? styles.activeTab : ""}>
-          View Orders
-        </button>
-        <button onClick={handleLogout} className={styles.logoutButton}>
-          Logout
-        </button>
+        <button onClick={() => setActiveTab("placeOrder")} className={activeTab === "placeOrder" ? styles.activeTab : ""}>Place Order</button>
+        <button onClick={() => setActiveTab("orders")} className={activeTab === "orders" ? styles.activeTab : ""}>View Orders</button>
+        <button onClick={handleLogout} className={styles.logoutButton}>Logout</button>
       </aside>
 
       <main className={styles.mainContent}>
@@ -305,64 +328,39 @@ const SODashboard = () => {
             <select value={selectedParty} onChange={(e) => setSelectedParty(e.target.value)} className={styles.partySection}>
               <option value="">Select a party</option>
               {parties.map((p) => (
-                <option key={p.id} value={p.name}>
-                  {p.name}
-                </option>
+                <option key={p.id} value={p.name}>{p.name}</option>
               ))}
             </select>
             <label>Party Phone Number</label>
             <input type="text" value={partyMobile} onChange={(e) => setPartyMobile(e.target.value)} className={styles.inputField} placeholder="Enter Party Phone Number" />
             <label>POD</label>
-            <textarea
-              value={pod}
-              onChange={(e) => setPod(e.target.value)}
-              placeholder="Enter Your POD"
-              className={styles.partySection}
-            />
+            <textarea value={pod} onChange={(e) => setPod(e.target.value)} placeholder="Enter Your POD" className={styles.partySection} />
             <label>Contact Info</label>
-            <textarea
-              value={contactInfo}
-              onChange={(e) => setContactInfo(e.target.value)}
-              placeholder="Enter Phone Number and Delivery Address"
-              className={styles.partySection}
-            />
+            <textarea value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} placeholder="Enter Phone Number and Delivery Address" className={styles.partySection} />
             {selectedProducts.map((product, index) => (
               <div key={index} className={styles.productRow}>
-                <select
-                  value={product.productId}
-                  onChange={(e) => handleProductChange(index, "productId", e.target.value)}
-                  className={styles.productSelect}
-                >
+                <select value={product.productId} onChange={(e) => handleProductChange(index, "productId", e.target.value)} className={styles.productSelect}>
                   <option value="">Select Product</option>
                   {products.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} - {p.variety} - {p.packSize} - {p.packType}
-                    </option>
+                    <option key={p.id} value={p.id}>{p.name} - {p.variety} - {p.packSize} - {p.packType}</option>
                   ))}
                 </select>
-                <input
-                  type="number"
-                  placeholder="Qty"
-                  min="1"
-                  value={product.quantity}
-                  onChange={(e) => handleProductChange(index, "quantity", e.target.value)}
-                  className={styles.qtyInput}
-                />
+                <input type="number" placeholder="Qty" min="1" value={product.quantity} onChange={(e) => handleProductChange(index, "quantity", e.target.value)} className={styles.qtyInput} />
                 <button onClick={() => {
                   const updated = selectedProducts.filter((_, i) => i !== index);
                   setSelectedProducts(updated);
                 }} className={styles.removeBtn}>Remove</button>
               </div>
             ))}
-
             <button onClick={handleAddProduct} className={styles.productBtn}>+ Add Product</button>
             <div className={styles.actionButtons}>
-              <button onClick={handleSubmitOrder} className={styles.submitBtn}>Submit Order</button>
+              <button onClick={handleSubmitOrder} className={styles.submitBtn} disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit Order"}
+              </button>
               <button onClick={resetOrderForm} className={styles.cancelBtn}>Reset</button>
             </div>
           </div>
         )}
-
         {activeTab === "orders" && (
           <div>
             <h2>My Orders</h2>
@@ -371,9 +369,7 @@ const SODashboard = () => {
               <select value={filterParty} onChange={(e) => setFilterParty(e.target.value)}>
                 <option value="">All</option>
                 {parties.map((p) => (
-                  <option key={p.id} value={p.name}>
-                    {p.name}
-                  </option>
+                  <option key={p.id} value={p.name}>{p.name}</option>
                 ))}
               </select>
               <label>Start Date: </label>

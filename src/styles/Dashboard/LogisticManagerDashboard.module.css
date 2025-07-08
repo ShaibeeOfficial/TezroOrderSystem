@@ -198,8 +198,24 @@
 
 .rejectButton {
   background-color: #e74c3c;
+  background-color: #3cd3e7;
+  color: white;
+  border: none;
+  padding: 6px 30px;
+  cursor: pointer;
+  border-radius: 4px;
   margin-top: 10px;
-  padding: 6px 16px;
+}
+
+.revertButton {
+  background-color: #3cd3e7;
+ background-color: #3cd3e7;
+  color: white;
+  border: none;
+  padding: 6px 30px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 .pagination {

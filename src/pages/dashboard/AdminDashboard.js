@@ -402,10 +402,12 @@ const AdminDashboard = () => {
                 <option value="Vegetables">Vegetables</option>
                 <option value="Hybrid Rice">Hybrid Rice</option>
                 <option value="Paddy">Paddy</option>
-                <option value="Corn">Corn</option>
+                <option value="Sultan Afgoi">Sultan Afgoi</option>
+                <option value="Hybrid Corn"> Hybrid Corn</option>
                 <option value="Sorghum">Sorghum</option>
                 <option value="Cotton">Cotton</option>
                 <option value="Mustard">Mustard</option>
+                <option value="Hyrbid Mustard">Hybrid Mustard</option>
                 <option value="Pearl Millet">Pearl Millet</option>
                 <option value="Green Pea">Green Pea</option>
                 <option value="Wheat">Wheat</option>
