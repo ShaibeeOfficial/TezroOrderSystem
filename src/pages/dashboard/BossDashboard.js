@@ -18,6 +18,8 @@ import * as XLSX from 'xlsx';
 import logo from "../../assets/logo.jpg"; // adjust path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 
@@ -56,137 +58,138 @@ const BossDashboard = () => {
   //   };
 
   const handleExportPDF = async () => {
-  const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
-  const doc = new jsPDF();
+    const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
+    const doc = new jsPDF();
 
-  const logoData = await toDataURL(logo); // full-color logo for top
-  const watermarkData = await toDataURLWithOpacity(logo, 0.05); // transparent watermark
+    const logoData = await toDataURL(logo); // full-color logo for top
+    const watermarkData = await toDataURLWithOpacity(logo, 0.05); // transparent watermark
 
-  selectedOrders.forEach((order, index) => {
-    if (index > 0) doc.addPage();
+    selectedOrders.forEach((order, index) => {
+      if (index > 0) doc.addPage();
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const centerX = pageWidth / 2;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const centerX = pageWidth / 2;
 
-    // 💧 Add faded watermark behind content
-    doc.addImage(
-      watermarkData,
-      "PNG", // must be PNG to preserve transparency
-      centerX - 50,
-      pageHeight / 2 - 50,
-      100,
-      100
-    );
+      // 💧 Add faded watermark behind content
+      doc.addImage(
+        watermarkData,
+        "PNG", // must be PNG to preserve transparency
+        centerX - 50,
+        pageHeight / 2 - 50,
+        100,
+        100
+      );
 
-    // 🖼️ Add full-color logo + title at the top
-    doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18); // smaller logo
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("TEZRO SEED PVT LTD", centerX + 5, 22, { align: "center" });
-    doc.setFontSize(11);
-
-    let y = 38;
-    const labelWidth = 50;
-    const valueWidth = 130;
-
-    const drawField = (label, value) => {
-      const wrapped = doc.splitTextToSize(value || "N/A", valueWidth);
+      // 🖼️ Add full-color logo + title at the top
+      doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18); // smaller logo
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(`${label}:`, 14, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(wrapped, 14 + labelWidth, y);
-      y += wrapped.length * 6 + 2;
-    };
+      doc.text("TEZRO SEED PVT LTD", centerX + 5, 22, { align: "center" });
+      doc.setFontSize(11);
 
-    drawField("Order Ref", order.refCode || "N/A");
-    drawField("Order Placed By", order.soName);
-    drawField("BM / RSM", order.rsmName || "N/A");
-    drawField("Party Code", order.partyCode || "N/A");
-    drawField("Party Name", order.partyName || "N/A");
-    drawField("Party Mobile", order.partyMobile || "N/A");
-    drawField("Status", order.status || "N/A");
-    drawField("POD", order.pod || "N/A");
-    drawField("Contact Info", order.contactInfo || "N/A");
-    drawField("Commitment Message", order.commitmentOfPayment || order.commitmentMessage || "N/A");
+      let y = 38;
+      const labelWidth = 50;
+      const valueWidth = 130;
 
-    const commitmentDate = order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A";
-    drawField("Commitment Date", commitmentDate);
+      const drawField = (label, value) => {
+        const wrapped = doc.splitTextToSize(value || "N/A", valueWidth);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(wrapped, 14 + labelWidth, y);
+        y += wrapped.length * 6 + 2;
+      };
 
-    const balanceText =
-      order.balance > 0
-        ? `Rs. ${order.balance} (Credit)`
-        : order.balance < 0
-        ? `Rs. ${Math.abs(order.balance)} (Debit)`
-        : "Rs. 0";
-    drawField("Balance", balanceText);
+      drawField("Order Ref", order.refCode || "N/A");
+      drawField("Order Placed By", order.soName);
+      drawField("BM / RSM", order.rsmName || "N/A");
+      drawField("Party Code", order.partyCode || "N/A");
+      drawField("Party Name", order.partyName || "N/A");
+      drawField("Party Mobile", order.partyMobile || "N/A");
+      drawField("Status", order.status || "N/A");
+      drawField("POD", order.pod || "N/A");
+      drawField("Contact Info", order.contactInfo || "N/A");
+      drawField("Commitment Message", order.commitmentOfPayment || order.commitmentMessage || "N/A");
 
-    const tableBody = (order.products || []).map(product => [
-      product.season || "N/A",
-      product.category || "N/A",
-      product.name || "N/A",
-      product.variety || "N/A",
-      product.quantity?.toString() || "0",
-      product.credit ? `Rs. ${product.credit}` : "0",
-      product.debit ? `Rs. ${product.debit}` : "0"
-    ]);
+      const commitmentDate = order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A";
+      drawField("Commitment Date", commitmentDate);
 
-    autoTable(doc, {
-      startY: y + 5,
-      head: [["Season", "Category", "Product", "Variety", "Qty", "Credit", "Debit"]],
-      body: tableBody,
-      theme: "grid",
-      styles: {
-        fontSize: 10,
-        cellPadding: 3,
-        overflow: 'linebreak',
-        valign: 'middle'
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: 255,
-        halign: 'center'
-      },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 15 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-      }
+      const balanceText =
+        order.balance > 0
+          ? `Rs. ${order.balance} (Credit)`
+          : order.balance < 0
+            ? `Rs. ${Math.abs(order.balance)} (Debit)`
+            : "Rs. 0";
+      drawField("Balance", balanceText);
+
+      const tableBody = (order.products || []).map(product => [
+        product.season || "N/A",
+        product.category || "N/A",
+        product.name || "N/A",
+        product.variety || "N/A",
+        product.quantity?.toString() || "0",
+        product.credit ? `Rs. ${product.credit}` : "0",
+        product.debit ? `Rs. ${product.debit}` : "0"
+      ]);
+
+      autoTable(doc, {
+        startY: y + 5,
+        head: [["Season", "Category", "Product", "Variety", "Qty", "Credit", "Debit"]],
+        body: tableBody,
+        theme: "grid",
+        styles: {
+          fontSize: 10,
+          cellPadding: 3,
+          overflow: 'linebreak',
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [22, 160, 133],
+          textColor: 255,
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+        }
+      });
     });
-  });
 
-  doc.save("Order_List.pdf");
-};
+    doc.save("Order_List.pdf");
+    toast.success("PDF Exported Successfully!");
+  };
 
 
 
   function toDataURLWithOpacity(url, opacity = 0.05) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.src = url;
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
 
-      // Clear canvas to support transparency
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear canvas to support transparency
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Set global alpha for opacity
-      ctx.globalAlpha = opacity;
-      ctx.drawImage(img, 0, 0);
+        // Set global alpha for opacity
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(img, 0, 0);
 
-      resolve(canvas.toDataURL("image/png")); // use PNG for transparency
-    };
-    img.onerror = reject;
-  });
-}
+        resolve(canvas.toDataURL("image/png")); // use PNG for transparency
+      };
+      img.onerror = reject;
+    });
+  }
 
 
   // 📌 Helper: Convert image to base64
@@ -242,6 +245,8 @@ const BossDashboard = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Order Lis");
     XLSX.writeFile(workbook, "Order_Lis.xlsx");
+
+    toast.success("Orders Exported To Excel.");
   };
 
 
@@ -365,30 +370,55 @@ const BossDashboard = () => {
 
 
   const handleFinalApprove = async (orderId) => {
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, {
-      status: "Approved",
-      finalApprovedBy: auth.currentUser.uid,
-    });
-    fetchOrders();
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: "Approved",
+        finalApprovedBy: auth.currentUser.uid,
+      });
+      toast.success("Order approved successfully!");
+      fetchOrders();
+    } catch (error) {
+      console.error("Error approving order:", error);
+      toast.error("Failed to approve order.");
+    }
   };
 
+
   const handleReject = async (orderId) => {
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, {
-      status: "Rejected",
-      rejectedBy: auth.currentUser.uid,
-    });
-    fetchOrders();
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: "Rejected",
+        rejectedBy: auth.currentUser.uid,
+      });
+      toast.success("Order rejected.");
+      fetchOrders();
+    } catch (error) {
+      console.error("Error rejecting order:", error);
+      toast.error("Failed to reject order.");
+    }
   };
 
   const handleRevert = async (orderId) => {
     const orderRef = doc(db, 'orders', orderId);
+    const orderSnap = await getDoc(orderRef);
+
+    if (!orderSnap.exists()) return;
+
+    const orderData = orderSnap.data();
+
+    const isDirectOrder = !orderData.rsmId && !orderData.rsmName;
+
     await updateDoc(orderRef, {
-      status: 'Logistic Reviewed',
+      status: isDirectOrder ? 'Placed' : 'BM/RSM Submitted',
     });
+
+    toast.success(`Order has been reverted to ${isDirectOrder ? 'Placed' : 'BM/RSM Submitted'}`);
+
     await fetchOrders();
   };
+
 
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const paginatedOrders = filteredOrders.slice(
@@ -643,9 +673,9 @@ const BossDashboard = () => {
                         >
                           Reject
                         </button>
-                        <button 
-                        className={styles.revertButton} 
-                        onClick={() => handleRevert(order.id)}
+                        <button
+                          className={styles.revertButton}
+                          onClick={() => handleRevert(order.id)}
                         >
                           Revert
                         </button>
@@ -679,6 +709,7 @@ const BossDashboard = () => {
           ))}
         </div>
       )}
+      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 };

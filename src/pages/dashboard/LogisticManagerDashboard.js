@@ -10,6 +10,7 @@ import {
   doc,
   query,
   where,
+  getDoc,
   orderBy
 } from 'firebase/firestore';
 import { FaSignOutAlt } from 'react-icons/fa';
@@ -18,12 +19,15 @@ import * as XLSX from 'xlsx';
 import logo from "../../assets/logo.jpg"; // adjust path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 
 const ORDERS_PER_PAGE = 10;
 
 const LogisticManagerDashboard = () => {
+  const [userName, setUserName] = useState("");
   const [orders, setOrders] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +41,18 @@ const LogisticManagerDashboard = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
 
   const navigate = useNavigate();
+
+  const fetchUserName = async () => {
+    if (auth.currentUser) {
+      const userRef = doc(db, "users", auth.currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        setUserName(userData.name || "Boss");
+      }
+    }
+  };
+
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -85,15 +101,51 @@ const LogisticManagerDashboard = () => {
         })
       );
 
-      setOrders(data);
+      // ✅ Filter orders by user email
+      const currentUser = auth.currentUser;
+      let filteredData = data;
+
+      if (currentUser?.email === "uzairkhan@tezro.pk") {
+        filteredData = data.filter(order =>
+          order.products?.some(p => {
+            const category = (p.category || "").toLowerCase();
+            const name = (p.name || "").toLowerCase();
+            const quantity = parseFloat(p.quantity || 0);
+
+            // Only include real products
+            const isLedgerEntry = name === "n/a" || quantity === 0;
+
+            return !isLedgerEntry && (category === "vegetables" || category === "pearl millet");
+          })
+        );
+      } else if (currentUser?.email === "shakil@tezro.pk") {
+        filteredData = data.filter(order =>
+          order.products?.every(p => {
+            const category = (p.category || "").toLowerCase();
+            const name = (p.name || "").toLowerCase();
+            const quantity = parseFloat(p.quantity || 0);
+
+            // Only consider real products
+            const isLedgerEntry = name === "n/a" || quantity === 0;
+
+            return isLedgerEntry || (category !== "vegetables" && category !== "pearl millet");
+          })
+        );
+      }
+
+
+
+      setOrders(filteredData);
     } catch (error) {
       console.error("Error fetching orders:", error);
     }
     setIsLoading(false);
   };
 
+
   useEffect(() => {
     fetchOrders();
+    fetchUserName();
   }, []);
 
   useEffect(() => {
@@ -149,138 +201,139 @@ const LogisticManagerDashboard = () => {
   }, [orders, activeStatus, soFilter, rsmFilter, partyFilter, dateRange, commitmentDateFilter]);
 
 
- const handleExportPDF = async () => {
-  const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
-  const doc = new jsPDF();
+  const handleExportPDF = async () => {
+    const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
+    const doc = new jsPDF();
 
-  const logoData = await toDataURL(logo); // full-color logo for top
-  const watermarkData = await toDataURLWithOpacity(logo, 0.05); // transparent watermark
+    const logoData = await toDataURL(logo); // full-color logo for top
+    const watermarkData = await toDataURLWithOpacity(logo, 0.05); // transparent watermark
 
-  selectedOrders.forEach((order, index) => {
-    if (index > 0) doc.addPage();
+    selectedOrders.forEach((order, index) => {
+      if (index > 0) doc.addPage();
 
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const centerX = pageWidth / 2;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const centerX = pageWidth / 2;
 
-    // 💧 Add faded watermark behind content
-    doc.addImage(
-      watermarkData,
-      "PNG", // must be PNG to preserve transparency
-      centerX - 50,
-      pageHeight / 2 - 50,
-      100,
-      100
-    );
+      // 💧 Add faded watermark behind content
+      doc.addImage(
+        watermarkData,
+        "PNG", // must be PNG to preserve transparency
+        centerX - 50,
+        pageHeight / 2 - 50,
+        100,
+        100
+      );
 
-    // 🖼️ Add full-color logo + title at the top
-    doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18); // smaller logo
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("TEZRO SEED PVT LTD", centerX + 5, 22, { align: "center" });
-    doc.setFontSize(11);
-
-    let y = 38;
-    const labelWidth = 50;
-    const valueWidth = 130;
-
-    const drawField = (label, value) => {
-      const wrapped = doc.splitTextToSize(value || "N/A", valueWidth);
+      // 🖼️ Add full-color logo + title at the top
+      doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18); // smaller logo
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(`${label}:`, 14, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(wrapped, 14 + labelWidth, y);
-      y += wrapped.length * 6 + 2;
-    };
+      doc.text("TEZRO SEED PVT LTD", centerX + 5, 22, { align: "center" });
+      doc.setFontSize(11);
 
-    drawField("Order Ref", order.refCode || "N/A");
-    drawField("Order Placed By", order.soName);
-    drawField("BM / RSM", order.rsmName || "N/A");
-    drawField("Party Code", order.partyCode || "N/A");
-    drawField("Party Name", order.partyName || "N/A");
-    drawField("Party Mobile", order.partyMobile || "N/A");
-    drawField("Status", order.status || "N/A");
-    drawField("POD", order.pod || "N/A");
-    drawField("Contact Info", order.contactInfo || "N/A");
-    drawField("Commitment Message", order.commitmentOfPayment || order.commitmentMessage || "N/A");
+      let y = 38;
+      const labelWidth = 50;
+      const valueWidth = 130;
 
-    const commitmentDate = order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A";
-    drawField("Commitment Date", commitmentDate);
+      const drawField = (label, value) => {
+        const wrapped = doc.splitTextToSize(value || "N/A", valueWidth);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, 14, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(wrapped, 14 + labelWidth, y);
+        y += wrapped.length * 6 + 2;
+      };
 
-    const balanceText =
-      order.balance > 0
-        ? `Rs. ${order.balance} (Credit)`
-        : order.balance < 0
-        ? `Rs. ${Math.abs(order.balance)} (Debit)`
-        : "Rs. 0";
-    drawField("Balance", balanceText);
+      drawField("Order Ref", order.refCode || "N/A");
+      drawField("Order Placed By", order.soName);
+      drawField("BM / RSM", order.rsmName || "N/A");
+      drawField("Party Code", order.partyCode || "N/A");
+      drawField("Party Name", order.partyName || "N/A");
+      drawField("Party Mobile", order.partyMobile || "N/A");
+      drawField("Status", order.status || "N/A");
+      drawField("POD", order.pod || "N/A");
+      drawField("Contact Info", order.contactInfo || "N/A");
+      drawField("Commitment Message", order.commitmentOfPayment || order.commitmentMessage || "N/A");
 
-    const tableBody = (order.products || []).map(product => [
-      product.season || "N/A",
-      product.category || "N/A",
-      product.name || "N/A",
-      product.variety || "N/A",
-      product.quantity?.toString() || "0",
-      product.credit ? `Rs. ${product.credit}` : "0",
-      product.debit ? `Rs. ${product.debit}` : "0"
-    ]);
+      const commitmentDate = order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A";
+      drawField("Commitment Date", commitmentDate);
 
-    autoTable(doc, {
-      startY: y + 5,
-      head: [["Season", "Category", "Product", "Variety", "Qty", "Credit", "Debit"]],
-      body: tableBody,
-      theme: "grid",
-      styles: {
-        fontSize: 10,
-        cellPadding: 3,
-        overflow: 'linebreak',
-        valign: 'middle'
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-        textColor: 255,
-        halign: 'center'
-      },
-      columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 15 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-      }
+      const balanceText =
+        order.balance > 0
+          ? `Rs. ${order.balance} (Credit)`
+          : order.balance < 0
+            ? `Rs. ${Math.abs(order.balance)} (Debit)`
+            : "Rs. 0";
+      drawField("Balance", balanceText);
+
+      const tableBody = (order.products || []).map(product => [
+        product.season || "N/A",
+        product.category || "N/A",
+        product.name || "N/A",
+        product.variety || "N/A",
+        product.quantity?.toString() || "0",
+        product.credit ? `Rs. ${product.credit}` : "0",
+        product.debit ? `Rs. ${product.debit}` : "0"
+      ]);
+
+      autoTable(doc, {
+        startY: y + 5,
+        head: [["Season", "Category", "Product", "Variety", "Qty", "Credit", "Debit"]],
+        body: tableBody,
+        theme: "grid",
+        styles: {
+          fontSize: 10,
+          cellPadding: 3,
+          overflow: 'linebreak',
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [22, 160, 133],
+          textColor: 255,
+          halign: 'center'
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 20 },
+          6: { cellWidth: 20 },
+        }
+      });
     });
-  });
 
-  doc.save("Order_List.pdf");
-};
+    doc.save("Order_List.pdf");
+    toast.success("PDF Exported Successfully");
+  };
 
 
 
   function toDataURLWithOpacity(url, opacity = 0.05) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.src = url;
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = url;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
 
-      // Clear canvas to support transparency
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear canvas to support transparency
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Set global alpha for opacity
-      ctx.globalAlpha = opacity;
-      ctx.drawImage(img, 0, 0);
+        // Set global alpha for opacity
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(img, 0, 0);
 
-      resolve(canvas.toDataURL("image/png")); // use PNG for transparency
-    };
-    img.onerror = reject;
-  });
-}
+        resolve(canvas.toDataURL("image/png")); // use PNG for transparency
+      };
+      img.onerror = reject;
+    });
+  }
 
 
   // 📌 Helper: Convert image to base64
@@ -336,6 +389,7 @@ const LogisticManagerDashboard = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Order Lis");
     XLSX.writeFile(workbook, "Order_Lis.xlsx");
+    toast.success("Excel File Exported Successfully");
   };
 
 
@@ -378,6 +432,7 @@ const LogisticManagerDashboard = () => {
           : order
       )
     );
+    toast.success("New Product Added Successfully");
   };
 
   const handleRemoveProduct = (orderId, indexToRemove) => {
@@ -391,9 +446,11 @@ const LogisticManagerDashboard = () => {
           : order
       )
     );
+     toast.info("Product Removed Successfully");
   };
 
   const handleApprove = async (order) => {
+  try {
     const orderRef = doc(db, 'orders', order.id);
 
     const categoryBalances = {};
@@ -413,24 +470,44 @@ const LogisticManagerDashboard = () => {
       balanceByCategory: categoryBalances,
     });
 
+    toast.success("Order approved successfully");
     await fetchOrders();
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to approve order");
+  }
+};
+
 
   const handleReject = async (orderId) => {
+  try {
     const orderRef = doc(db, 'orders', orderId);
     await updateDoc(orderRef, {
       status: 'Rejected By Logistic',
     });
+    toast.info("Order rejected");
     await fetchOrders();
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to reject order");
+  }
+};
 
-  const handleRevert = async (orderId) => {
+
+ const handleRevert = async (orderId) => {
+  try {
     const orderRef = doc(db, 'orders', orderId);
     await updateDoc(orderRef, {
       status: 'Pending',
     });
+    toast.warn("Order reverted to Pending");
     await fetchOrders();
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to revert order");
+  }
+};
+
 
 
   const formatDate = (timestamp) => {
@@ -451,7 +528,10 @@ const LogisticManagerDashboard = () => {
               alt="Logo"
               className={styles.logo}
             />
+            <div>
             <h2>Logistic Manager Dashboard</h2>
+            {userName && <p className={styles.welcome}>Welcome {userName}</p>}
+            </div>
           </div>
           <button className={styles.logoutButton} onClick={async () => {
             await auth.signOut();
@@ -740,11 +820,17 @@ const LogisticManagerDashboard = () => {
                         </td>
                         <td>{order.status}</td>
                         <td>
-                          {["BM/RSM Submitted", "Placed"].includes(order.status) && (
+                          {order.status === "BM/RSM Submitted" && (
                             <>
                               <button className={styles.approveBtn} onClick={() => handleApprove(order)}>Approve</button>
                               <button className={styles.rejectButton} onClick={() => handleReject(order.id)}>Reject</button>
                               <button className={styles.revertButton} onClick={() => handleRevert(order.id)}>Revert</button>
+                            </>
+                          )}
+                          {order.status === "Placed" && (
+                            <>
+                              <button className={styles.approveBtn} onClick={() => handleApprove(order)}>Approve</button>
+                              <button className={styles.rejectButton} onClick={() => handleReject(order.id)}>Reject</button>
                             </>
                           )}
                         </td>
@@ -763,6 +849,7 @@ const LogisticManagerDashboard = () => {
           )}
         </div>
       </div>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

@@ -8,6 +8,7 @@ import {
   getDocs,
   updateDoc,
   doc,
+  getDoc,
   orderBy,
 } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -15,9 +16,12 @@ import styles from "../../styles/Dashboard/RsmDashboard.module.css";
 import logo from "../../assets/logo.jpg"; // adjust path as needed
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 const RsmDashboard = () => {
+  const [userName, setUserName] = useState("");
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [activeStatus, setActiveStatus] = useState("Pending");
@@ -32,6 +36,18 @@ const RsmDashboard = () => {
   const ordersPerPage = 10;
 
   const navigate = useNavigate();
+
+
+  const fetchUserName = async () => {
+    if (auth.currentUser) {
+      const userRef = doc(db, "users", auth.currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        setUserName(userData.name || "Boss");
+      }
+    }
+  };
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -80,6 +96,7 @@ const RsmDashboard = () => {
 
   useEffect(() => {
     fetchOrders();
+    fetchUserName();
   }, []);
 
 
@@ -292,29 +309,42 @@ const RsmDashboard = () => {
   const handleApprove = async (orderId) => {
     const order = orders.find((o) => o.id === orderId);
 
-    if (!order.commitmentOfPayment || !order.commitmentDate) {
-      alert("Please enter both Commitment Message and Date before approving.");
+    if (!order.commitmentOfPayment?.trim() || !order.commitmentDate || order.commitmentDate === "") {
+      toast.warning("Please enter both Commitment Message and Date before approving.");
       return;
     }
 
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, {
-      status: "BM/RSM Submitted",
-      approvedBy: auth.currentUser.uid,
-      commitmentOfPayment: order.commitmentOfPayment,
-      commitmentDate: new Date(order.commitmentDate),
-    });
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: "BM/RSM Submitted",
+        approvedBy: auth.currentUser.uid,
+        commitmentOfPayment: order.commitmentOfPayment,
+        commitmentDate: new Date(order.commitmentDate),
+      });
 
-    fetchOrders();
+      toast.success("Order approved!");
+      fetchOrders();
+    } catch (err) {
+      console.error("Error approving order:", err);
+      toast.error("Failed to approve order.");
+    }
   };
 
   const handleReject = async (orderId) => {
-    const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, {
-      status: "Rejected By BM/RSM",
-      approvedBy: auth.currentUser.uid,
-    });
-    fetchOrders();
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      await updateDoc(orderRef, {
+        status: "Rejected By BM/RSM",
+        approvedBy: auth.currentUser.uid,
+      });
+
+      toast.success("Order rejected.");
+      fetchOrders();
+    } catch (err) {
+      console.error("Error rejecting order:", err);
+      toast.error("Failed to reject order.");
+    }
   };
 
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
@@ -332,7 +362,10 @@ const RsmDashboard = () => {
             alt="Logo"
             className={styles.logo}
           />
+          <div>
           <h2>BSM/RSM Dashboard</h2>
+           {userName && <p className={styles.welcome}>Welcome {userName} Sir</p>}
+          </div>
         </div>
         <button
           onClick={async () => {
@@ -457,10 +490,10 @@ const RsmDashboard = () => {
                 <tr
                   key={order.id}
                   className={`${styles.orderRow} ${order.status === "Approved"
-                      ? styles.approvedBorder
-                      : order.status === "Rejected" || order.status === "Rejected By BM/RSM" || order.status === "Rejected By Logistic"
-                        ? styles.rejectedBorder
-                        : styles.pendingBorder
+                    ? styles.approvedBorder
+                    : order.status === "Rejected" || order.status === "Rejected By BM/RSM" || order.status === "Rejected By Logistic"
+                      ? styles.rejectedBorder
+                      : styles.pendingBorder
                     }`}
                 >
                   {/* chechbox table data  */}
@@ -580,6 +613,7 @@ const RsmDashboard = () => {
           ))}
         </div>
       )}
+      <ToastContainer position="top-right" autoClose={2500} />
     </div>
   );
 };

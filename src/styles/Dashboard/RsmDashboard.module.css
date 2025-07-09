@@ -58,6 +58,13 @@
   min-width: 200px;
 }
 
+.welcome {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 4px;
+  color: #666;
+}
+
 .tableWrapper {
   overflow-x: auto;
   margin-top: 20px;
@@ -101,7 +108,7 @@
 .rejectBtn {
   background-color: #f44336;
   color: white;
-  padding: 6px 10px;
+  padding: 6px 16px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -225,9 +232,13 @@
     font-size: 0.85rem;
   }
 
-  .approveBtn,
-  .rejectBtn {
+  .approveBtn {
     padding: 5px 8px;
+    font-size: 0.8rem;
+  }
+
+  .rejectBtn {
+    padding: 5px 14px;
     font-size: 0.8rem;
   }
 

@@ -134,6 +134,13 @@
   min-width: 200px;
 }
 
+.welcome {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 4px;
+  color: #666;
+}
+
 .tableWrapper {
   overflow-x: auto;
   margin-top: 20px;
@@ -194,11 +201,16 @@
 
 .approveBtn {
   background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 6px 25px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 .rejectButton {
   background-color: #e74c3c;
-  background-color: #3cd3e7;
   color: white;
   border: none;
   padding: 6px 30px;
@@ -208,9 +220,8 @@
 }
 
 .revertButton {
-  background-color: #3cd3e7;
- background-color: #3cd3e7;
-  color: white;
+  background-color: #f1e759;
+  color: #000;
   border: none;
   padding: 6px 30px;
   cursor: pointer;

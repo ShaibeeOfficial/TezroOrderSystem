@@ -90,7 +90,7 @@
   background-color: #27ae60;
   color: white;
   border: none;
-  padding: 6px 24px;
+  padding: 6px 25px;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -107,7 +107,7 @@
 
 .revertButton {
   background-color: #3cd3e7;
-  color: white;
+  color: #000;
   border: none;
   padding: 6px 30px;
   cursor: pointer;
