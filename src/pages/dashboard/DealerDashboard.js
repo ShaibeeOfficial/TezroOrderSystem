@@ -38,6 +38,12 @@ const DealerDashboard = () => {
   const [userName, setUserName] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [submitting, setSubmitting] = useState(false); // prevent double submit
+  const [totalOrderCount, setTotalOrderCount] = useState(0);
+  const [approvedOrderCount, setApprovedOrderCount] = useState(0);
+  const [pendingOrderCount, setPendingOrderCount] = useState(0);
+  const [rejectedOrderCount, setRejectedOrderCount] = useState(0);
+
+
 
   const navigate = useNavigate();
 
@@ -75,6 +81,12 @@ const DealerDashboard = () => {
     const snapshot = await getDocs(q);
     const allOrders = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     setOrders(allOrders);
+
+    setTotalOrderCount(allOrders.length);
+    setApprovedOrderCount(allOrders.filter(order => order.status === "Approved").length);
+    setPendingOrderCount(allOrders.filter(order => order.status === "Placed" || order.status === "Pending").length);
+    setRejectedOrderCount(allOrders.filter(order => order.status === "Rejected" || order.status === "Rejected By BM/RSM" || order.status === "Rejected By Logistic").length);
+
   };
 
   useEffect(() => {
@@ -176,8 +188,8 @@ const DealerDashboard = () => {
                 order.status === "Approved"
                   ? { backgroundColor: "#d4edda" }
                   : order.status === "Rejected"
-                  ? { backgroundColor: "#f8d7da" }
-                  : {};
+                    ? { backgroundColor: "#f8d7da" }
+                    : {};
               return (
                 <tr key={order.id} style={rowStyle}>
                   <td>{date}</td>
@@ -307,6 +319,12 @@ const DealerDashboard = () => {
               <input type="text" placeholder="Search by party" value={filterParty} onChange={(e) => setFilterParty(e.target.value)} />
               <input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} />
               <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
+            </div>
+            <div className={styles.orderCounts}>
+              <p><strong>Total Orders:</strong> {totalOrderCount}</p>
+              <p><strong>Pending:</strong> {pendingOrderCount}</p>
+              <p><strong>Approved:</strong> {approvedOrderCount}</p>
+              <p><strong>Rejected:</strong> {rejectedOrderCount}</p>
             </div>
             {renderOrders()}
           </div>

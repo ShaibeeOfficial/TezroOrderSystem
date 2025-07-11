@@ -37,6 +37,7 @@ const BossDashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
 
+
   const ordersPerPage = 10;
 
   const navigate = useNavigate();
@@ -61,38 +62,41 @@ const BossDashboard = () => {
     const selectedOrders = orders.filter(order => selectedOrderIds.includes(order.id));
     const doc = new jsPDF();
 
-    const logoData = await toDataURL(logo); // full-color logo for top
-    const watermarkData = await toDataURLWithOpacity(logo, 0.05); // transparent watermark
+    const logoData = await toDataURL(logo);
+    const watermarkData = await toDataURLWithOpacity(logo, 0.05);
 
     selectedOrders.forEach((order, index) => {
       if (index > 0) doc.addPage();
 
       const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
+      // const pageHeight = doc.internal.pageSize.getHeight();
       const centerX = pageWidth / 2;
 
-      // 💧 Add faded watermark behind content
-      doc.addImage(
-        watermarkData,
-        "PNG", // must be PNG to preserve transparency
-        centerX - 50,
-        pageHeight / 2 - 50,
-        100,
-        100
-      );
+      // 💧 Watermark
+      // Estimate content height
+      const estimatedFieldHeight = 7 * 6 + 2 * 7; // 7 fields approx.
+      const productRows = order.products || [];
+      const estimatedTableHeight = productRows.length * 8; // ~8 units per row
 
-      // 🖼️ Add full-color logo + title at the top
-      doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18); // smaller logo
+      const contentStartY = 38;
+      const contentHeight = estimatedFieldHeight + estimatedTableHeight;
+      const contentCenterY = contentStartY + contentHeight / 2;
+
+      doc.addImage(watermarkData, "PNG", centerX - 50, contentCenterY - 50, 100, 100);
+
+
+      // 🖼️ Logo + Heading
+      doc.addImage(logoData, "JPEG", centerX - 45, 10, 18, 18);
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("TEZRO SEED PVT LTD", centerX + 5, 22, { align: "center" });
       doc.setFontSize(11);
 
       let y = 38;
-      const labelWidth = 50;
-      const valueWidth = 130;
 
       const drawField = (label, value) => {
+        const labelWidth = 45;
+        const valueWidth = 130;
         const wrapped = doc.splitTextToSize(value || "N/A", valueWidth);
         doc.setFont("helvetica", "bold");
         doc.text(`${label}:`, 14, y);
@@ -101,19 +105,18 @@ const BossDashboard = () => {
         y += wrapped.length * 6 + 2;
       };
 
-      drawField("Order Ref", order.refCode || "N/A");
-      drawField("Order Placed By", order.soName);
+      // 🔷 Order-level fields
+      // drawField("Order Ref", order.refCode || "N/A");
+      drawField("Order By", order.soName || "N/A");
       drawField("BM / RSM", order.rsmName || "N/A");
       drawField("Party Code", order.partyCode || "N/A");
       drawField("Party Name", order.partyName || "N/A");
       drawField("Party Mobile", order.partyMobile || "N/A");
-      drawField("Status", order.status || "N/A");
       drawField("POD", order.pod || "N/A");
       drawField("Contact Info", order.contactInfo || "N/A");
-      drawField("Commitment Message", order.commitmentOfPayment || order.commitmentMessage || "N/A");
 
-      const commitmentDate = order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A";
-      drawField("Commitment Date", commitmentDate);
+      const commitmentText = `${order.commitmentOfPayment || order.commitmentMessage || "N/A"
+        } (${order.commitmentDate?.toDate?.()?.toLocaleDateString() || "N/A"})`;
 
       const balanceText =
         order.balance > 0
@@ -121,26 +124,46 @@ const BossDashboard = () => {
           : order.balance < 0
             ? `Rs. ${Math.abs(order.balance)} (Debit)`
             : "Rs. 0";
-      drawField("Balance", balanceText);
 
-      const tableBody = (order.products || []).map(product => [
-        product.season || "N/A",
-        product.category || "N/A",
-        product.name || "N/A",
-        product.variety || "N/A",
-        product.quantity?.toString() || "0",
-        product.credit ? `Rs. ${product.credit}` : "0",
-        product.debit ? `Rs. ${product.debit}` : "0"
-      ]);
+      const status = order.status || "N/A";
+      const finalApprovalBy = order.finalApprovedByName || "N/A";
+      const products = order.products || [];
+
+      // 🧾 Build table body with rowSpan for merged cells
+      const body = products.map((product, i) => {
+        const row = [
+          doc.splitTextToSize(product.season || "N/A", 20),
+          doc.splitTextToSize(product.category || "N/A", 25),
+          doc.splitTextToSize(product.name || "N/A", 25),
+          doc.splitTextToSize(product.variety || "N/A", 20),
+          doc.splitTextToSize(product.quantity?.toString() || "0", 10),
+          doc.splitTextToSize(product.credit ? `Rs. ${product.credit}` : "0", 20),
+          doc.splitTextToSize(product.debit ? `Rs. ${product.debit}` : "0", 20),
+        ];
+
+        if (i === 0) {
+          row.push(
+            { content: balanceText, rowSpan: products.length, styles: { halign: 'center' } },
+            { content: commitmentText, rowSpan: products.length, styles: { halign: 'center', fontStyle: 'italic' } },
+            { content: status, rowSpan: products.length, styles: { halign: 'center' } },
+            { content: finalApprovalBy, rowSpan: products.length, styles: { halign: 'center' } }
+          );
+        }
+
+        return row;
+      });
 
       autoTable(doc, {
         startY: y + 5,
-        head: [["Season", "Category", "Product", "Variety", "Qty", "Credit", "Debit"]],
-        body: tableBody,
+        head: [[
+          "Season", "Category", "Product", "Variety", "Qty",
+          "Credit", "Debit", "Balance", "Commitment", "Status", "Final Approval By"
+        ]],
+        body,
         theme: "grid",
         styles: {
-          fontSize: 10,
-          cellPadding: 3,
+          fontSize: 8,
+          cellPadding: 1,
           overflow: 'linebreak',
           valign: 'middle'
         },
@@ -150,13 +173,17 @@ const BossDashboard = () => {
           halign: 'center'
         },
         columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 30 },
-          4: { cellWidth: 15 },
-          5: { cellWidth: 20 },
-          6: { cellWidth: 20 },
+          0: { cellWidth: 12 },  // Season
+          1: { cellWidth: 18 },  // Category
+          2: { cellWidth: 18 },  // Product
+          3: { cellWidth: 15 },  // Variety
+          4: { cellWidth: 7 },  // Qty
+          5: { cellWidth: 15 },  // Credit
+          6: { cellWidth: 15 },  // Debit
+          7: { cellWidth: 25 },  // Balance
+          8: { cellWidth: 20 },  // Commitment
+          9: { cellWidth: 14 },  // Status
+          10: { cellWidth: 25 }  // Final Approval By
         }
       });
     });
@@ -221,11 +248,10 @@ const BossDashboard = () => {
       return {
         OrderDate: order.createdAt?.toDate?.().toLocaleDateString('en-GB') || '',
         SO: order.soName,
-        ApprovedBy: order.rsmName,
+        BMName: order.rsmName,
         PartyCode: order.partyCode,
         PartyName: order.partyName,
         Mobile: order.partyMobile,
-        OrderStatus: order.status,
         POD: order.pod,
         contactInfo: order.contactInfo,
         CommitmentMessage: order.commitmentOfPayment || '',
@@ -238,6 +264,9 @@ const BossDashboard = () => {
         Debits: products.map(p => p.debit ?? '').join('\n'),
         Credits: products.map(p => p.credit ?? '').join('\n'),
         Balance: order.Balance,
+        OrderStatus: order.status,
+        FinalApprovalBy: order.finalApprovedByName,
+
       };
     });
 
@@ -266,6 +295,8 @@ const BossDashboard = () => {
           const orderData = docSnap.data();
           let soName = "N/A";
           let rsmName = orderData.rsmName || "N/A";
+          let finalApprovedByName = "N/A";
+
 
           if (orderData.soId) {
             try {
@@ -281,6 +312,19 @@ const BossDashboard = () => {
             }
           }
 
+          // 🔹 Fetch Final Approval Name
+          if (orderData.finalApprovedBy) {
+            try {
+              const userDoc = await getDoc(doc(db, "users", orderData.finalApprovedBy));
+              if (userDoc.exists()) {
+                finalApprovedByName = userDoc.data().name || userDoc.data().email || "Boss";
+              }
+            } catch (err) {
+              console.error("Failed to fetch final approver:", err);
+            }
+          }
+
+
           const balance = (orderData.products || []).reduce((acc, product) => {
             const credit = parseFloat(product.credit || 0);
             const debit = parseFloat(product.debit || 0);
@@ -293,6 +337,7 @@ const BossDashboard = () => {
             soName,
             rsmName,
             balance,
+            finalApprovedByName,
           };
         })
       );
@@ -414,7 +459,7 @@ const BossDashboard = () => {
       status: isDirectOrder ? 'Placed' : 'BM/RSM Submitted',
     });
 
-    toast.success(`Order has been reverted to ${isDirectOrder ? 'Placed' : 'BM/RSM Submitted'}`);
+    toast.success(`Order has been reverted to ${isDirectOrder ? 'Logistic Manager' : 'Logistic Manager'} Successfully`);
 
     await fetchOrders();
   };
@@ -458,17 +503,36 @@ const BossDashboard = () => {
             onClick={fetchOrders}
             disabled={isLoading}
           >
-            🔄 {isLoading ? "Refreshing..." : ''}
+            🔄 {isLoading ? "Refreshing..." : "Refresh Orders"}
           </button>
-          {["All", "Logistic Reviewed", "Approved", "Rejected"].map((status) => (
-            <button
-              key={status}
-              className={`${styles.statusBtn} ${activeStatus === status ? styles.active : ""}`}
-              onClick={() => setActiveStatus(status)}
-            >
-              {status}
-            </button>
-          ))}
+
+          {["All", "Logistic Reviewed", "Approved", "Rejected"].map((status) => {
+            let count = 0;
+
+            if (status === "All") {
+              count = orders.length;
+            } else if (status === "Rejected") {
+              count = orders.filter(
+                (order) =>
+                  order.status === "Rejected" ||
+                  order.status === "Rejected By Logistic" ||
+                  order.status === "Rejected By BM/RSM"
+              ).length;
+            } else {
+              count = orders.filter((order) => order.status === status).length;
+            }
+
+            return (
+              <button
+                key={status}
+                className={`${styles.statusBtn} ${activeStatus === status ? styles.active : ""
+                  }`}
+                onClick={() => setActiveStatus(status)}
+              >
+                {status} ({count})
+              </button>
+            );
+          })}
         </div>
 
         <div className={styles.filterControls}>
@@ -568,9 +632,10 @@ const BossDashboard = () => {
                 <th>POD</th>
                 <th>Contact Info</th>
                 <th>Commitment</th>
-                <th>Status</th>
                 <th>Products</th>
                 <th>Balance</th>
+                <th>Status</th>
+                <th>Final Approval By</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -622,7 +687,6 @@ const BossDashboard = () => {
                       )
                       : 'N/A'}
                   </td>
-                  <td>{order.status}</td>
                   <td>
                     <table className={styles.innerTable}>
                       <thead>
@@ -658,6 +722,8 @@ const BossDashboard = () => {
                         ? `Rs. ${Math.abs(order.balance)} (Debit)`
                         : "Rs. 0"}
                   </td>
+                  <td>{order.status}</td>
+                  <td>{order.finalApprovedByName || 'N/A'}</td>
                   <td>
                     {order.status === "Logistic Reviewed" && (
                       <>

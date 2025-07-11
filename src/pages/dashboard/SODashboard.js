@@ -40,6 +40,9 @@ const SODashboard = () => {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false); // 🔒 Double submit protection
+  // 🚀 Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const navigate = useNavigate();
 
@@ -80,13 +83,11 @@ const SODashboard = () => {
         const ordersQuery = query(collection(db, "orders"), where("soId", "==", auth.currentUser.uid));
         const querySnapshot = await getDocs(ordersQuery);
         const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
         const sorted = ordersData.sort((a, b) => {
           const dateA = a.createdAt?.toDate?.() || new Date(0);
           const dateB = b.createdAt?.toDate?.() || new Date(0);
           return dateB - dateA;
         });
-
         setOrders(sorted);
       } catch (err) {
         console.error("Error fetching orders:", err);
@@ -232,64 +233,81 @@ const SODashboard = () => {
       return matchesParty && matchesStartDate && matchesEndDate;
     });
 
+    const totalPages = Math.ceil(filteredOrders.length / pageSize);
+    const paginatedOrders = filteredOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     if (!filteredOrders.length) return <p>No matching orders found.</p>;
 
     return (
-      <div className={styles.responsiveTable}>
-        <table className={styles.ordersTable}>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Party</th>
-              <th>Party Number</th>
-              <th>POD</th>
-              <th>Contact Info</th>
-              <th>Status</th>
-              <th>Product</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map(order => {
-              const filteredProducts = order.products.filter(p => p.addedBy !== "LM");
-              const rowStyle =
-                order.status === "Approved"
-                  ? { backgroundColor: "#d4edda" }
-                  : order.status === "Rejected" || order.status === "Rejected By BM/RSM" || order.status === "Rejected By Logistic"
-                    ? { backgroundColor: "#f8d7da" }
-                    : {};
+      <>
+        <div className={styles.responsiveTable}>
+          <table className={styles.ordersTable}>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Party</th>
+                <th>Party Number</th>
+                <th>POD</th>
+                <th>Contact Info</th>
+                <th>Status</th>
+                <th>Product</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedOrders.map(order => {
+                const filteredProducts = order.products.filter(p => p.addedBy !== "LM");
+                const rowStyle =
+                  order.status === "Approved"
+                    ? { backgroundColor: "#d4edda" }
+                    : order.status === "Rejected" || order.status === "Rejected By BM/RSM" || order.status === "Rejected By Logistic"
+                      ? { backgroundColor: "#f8d7da" }
+                      : {};
 
-              return filteredProducts.length === 0 ? (
-                <tr key={order.id} style={rowStyle}>
-                  <td>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}</td>
-                  <td>{order.partyName}</td>
-                  <td>{order.status}</td>
-                  <td>{order.pod || 'N/A'}</td>
-                </tr>
-              ) : (
-                filteredProducts.map((product, idx) => (
-                  <tr key={`${order.id}-${idx}`} style={rowStyle}>
-                    {idx === 0 && (
-                      <>
-                        <td rowSpan={filteredProducts.length}>
-                          {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}
-                        </td>
-                        <td rowSpan={filteredProducts.length}>{order.partyName}</td>
-                        <td rowSpan={filteredProducts.length}>{order.partyMobile}</td>
-                        <td rowSpan={filteredProducts.length}>{order.pod || "N/A"}</td>
-                        <td rowSpan={filteredProducts.length}>{order.contactInfo || "N/A"}</td>
-                        <td rowSpan={filteredProducts.length}>{order.status}</td>
-                      </>
-                    )}
-                    <td>
-                      {product.name} - {product.variety} - {product.packSize} {product.packType} × {product.quantity}
-                    </td>
+                return filteredProducts.length === 0 ? (
+                  <tr key={order.id} style={rowStyle}>
+                    <td>{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}</td>
+                    <td>{order.partyName}</td>
+                    <td>{order.status}</td>
+                    <td>{order.pod || 'N/A'}</td>
                   </tr>
-                ))
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                ) : (
+                  filteredProducts.map((product, idx) => (
+                    <tr key={`${order.id}-${idx}`} style={rowStyle}>
+                      {idx === 0 && (
+                        <>
+                          <td rowSpan={filteredProducts.length}>
+                            {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString() : "N/A"}
+                          </td>
+                          <td rowSpan={filteredProducts.length}>{order.partyName}</td>
+                          <td rowSpan={filteredProducts.length}>{order.partyMobile}</td>
+                          <td rowSpan={filteredProducts.length}>{order.pod || "N/A"}</td>
+                          <td rowSpan={filteredProducts.length}>{order.contactInfo || "N/A"}</td>
+                          <td rowSpan={filteredProducts.length}>{order.status}</td>
+                        </>
+                      )}
+                      <td>
+                        {product.name} - {product.variety} - {product.packSize} {product.packType} × {product.quantity}
+                      </td>
+                    </tr>
+                  ))
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className={styles.pagination}>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>
+            Previous
+          </button>
+          <span style={{ margin: "0 10px" }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>
+            Next
+          </button>
+        </div>
+      </>
     );
   };
 
@@ -364,6 +382,25 @@ const SODashboard = () => {
         {activeTab === "orders" && (
           <div>
             <h2>My Orders</h2>
+            <div className={styles.orderCounts}>
+              <span className={styles.totalBox}>Total Orders: {orders.length}</span>
+              <span className={styles.pendingBox}>
+                Pending: {orders.filter(order => order.status === "Pending").length}
+              </span>
+              <span className={styles.approvedBox}>
+                Approved: {orders.filter(order => order.status === "Approved").length}
+              </span>
+              <span className={styles.rejectedBox}>
+                Rejected: {
+                  orders.filter(order =>
+                    order.status === "Rejected" ||
+                    order.status === "Rejected By BM/RSM" ||
+                    order.status === "Rejected By Logistic"
+                  ).length
+                }
+              </span>
+            </div>
+
             <div className={styles.filterContainer}>
               <label>Party: </label>
               <select value={filterParty} onChange={(e) => setFilterParty(e.target.value)}>
@@ -380,6 +417,8 @@ const SODashboard = () => {
             {renderOrdersList()}
           </div>
         )}
+
+
       </main>
     </div>
   );

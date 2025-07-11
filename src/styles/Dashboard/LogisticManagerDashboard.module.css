@@ -141,6 +141,13 @@
   color: #666;
 }
 
+.orderCount {
+  font-size: 16px;
+  margin-top: 10px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
 .tableWrapper {
   overflow-x: auto;
   margin-top: 20px;
