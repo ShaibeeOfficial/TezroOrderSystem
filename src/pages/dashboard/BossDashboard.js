@@ -36,6 +36,15 @@ const BossDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState("");
+  const [rejectingOrderId, setRejectingOrderId] = useState(null);
+  const [viewRejectModal, setViewRejectModal] = useState(false);
+  const [viewRejectMessage, setViewRejectMessage] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+
+
+
 
 
   const ordersPerPage = 10;
@@ -430,20 +439,32 @@ const BossDashboard = () => {
   };
 
 
-  const handleReject = async (orderId) => {
+  const handleReject = async () => {
+    if (!rejectingOrderId) return;
+
+    setIsRejecting(true); // disable button
+
     try {
-      const orderRef = doc(db, "orders", orderId);
+      const orderRef = doc(db, "orders", rejectingOrderId);
       await updateDoc(orderRef, {
         status: "Rejected",
         rejectedBy: auth.currentUser.uid,
+        rejectionMessage,
       });
       toast.success("Order rejected.");
+      setShowRejectModal(false);
+      setRejectionMessage("");
+      setRejectingOrderId(null);
       fetchOrders();
     } catch (error) {
       console.error("Error rejecting order:", error);
       toast.error("Failed to reject order.");
+    } finally {
+      setIsRejecting(false); // re-enable button
     }
   };
+
+
 
   const handleRevert = async (orderId) => {
     const orderRef = doc(db, 'orders', orderId);
@@ -722,7 +743,22 @@ const BossDashboard = () => {
                         ? `Rs. ${Math.abs(order.balance)} (Debit)`
                         : "Rs. 0"}
                   </td>
-                  <td>{order.status}</td>
+                  <td>
+                    {order.status}
+                    {order.status === "Rejected" && order.rejectionMessage && (
+                      <span
+                        title="View Rejection Message"
+                        onClick={() => {
+                          setViewRejectMessage(order.rejectionMessage);
+                          setViewRejectModal(true);
+                        }}
+                        style={{ marginLeft: 8, cursor: "pointer", color: "#e74c3c", fontWeight: "bold" }}
+                      >
+                        ❗
+                      </span>
+                    )}
+                  </td>
+
                   <td>{order.finalApprovedByName || 'N/A'}</td>
                   <td>
                     {order.status === "Logistic Reviewed" && (
@@ -735,7 +771,11 @@ const BossDashboard = () => {
                         </button>
                         <button
                           className={styles.rejectBtn}
-                          onClick={() => handleReject(order.id)}
+                          onClick={() => {
+                            setRejectingOrderId(order.id);
+                            setShowRejectModal(true);
+                            setRejectionMessage(""); // clear previous input
+                          }}
                         >
                           Reject
                         </button>
@@ -775,6 +815,63 @@ const BossDashboard = () => {
           ))}
         </div>
       )}
+      {showRejectModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>🛑 Reject Order</h3>
+            <p>Please provide a reason for rejection:</p>
+            <textarea
+              value={rejectionMessage}
+              onChange={(e) => setRejectionMessage(e.target.value)}
+              rows={4}
+              placeholder="Enter rejection message"
+            />
+            <div className={styles.modalButtons}>
+              <button
+                className={styles.rejectBtn}
+                onClick={handleReject}
+                disabled={!rejectionMessage.trim() || isRejecting}
+              >
+                {isRejecting ? "Rejecting..." : "Confirm Reject"}
+              </button>
+              <button
+                className={styles.rejectBtn}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectingOrderId(null);
+                  setRejectionMessage("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {viewRejectModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>📩 Rejection Message</h3>
+            <p style={{ whiteSpace: 'pre-wrap' }}>{viewRejectMessage}</p>
+            <div className={styles.modalButtons}>
+              <button
+                className={styles.modalCancelBtn}
+                onClick={() => {
+                  setViewRejectModal(false);
+                  setViewRejectMessage("");
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
       <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );

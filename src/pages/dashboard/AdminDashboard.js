@@ -9,6 +9,7 @@ import logo from "../../assets/logo.jpg"; // adjust path as needed
 
 
 
+
 const AdminDashboard = () => {
   const [activeSection, setActiveSection] = useState("users");
   const navigate = useNavigate();
@@ -34,56 +35,60 @@ const AdminDashboard = () => {
   const [status, setStatus] = useState("");
   const [salesOfficers, setSalesOfficers] = useState([]);
   const [rsmUsers, setRsmUsers] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [foundOrders, setFoundOrders] = useState([]);
+  const [deleteStatus, setDeleteStatus] = useState("");
+
 
   const handleCreateUser = async (e) => {
-  e.preventDefault();
-  setStatus("");
+    e.preventDefault();
+    setStatus("");
 
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
 
-    const userData = {
-      uid,
-      name,
-      email,
-      role,
-      createdAt: Timestamp.now(),
-    };
+      const userData = {
+        uid,
+        name,
+        email,
+        role,
+        createdAt: Timestamp.now(),
+      };
 
-    // If role is SO, add reportsTo
-    if (role === "so" && reportsTo) {
-      userData.reportsTo = reportsTo;
+      // If role is SO, add reportsTo
+      if (role === "so" && reportsTo) {
+        userData.reportsTo = reportsTo;
+      }
+
+      // If role is Dealer, add partyCode
+      if (role === "dealer" && partyCode.trim()) {
+        userData.partyCode = partyCode.trim();
+      }
+
+      await setDoc(doc(db, "users", uid), userData);
+
+      setStatus("✅ User created!");
+
+      // Reset fields
+      setEmail("");
+      setPassword("");
+      setName("");
+      setRole("so");
+      setReportsTo("");
+      setPartyCode(""); // clear Party Code input too if dealer
+
+      // Refresh user lists to reflect new users
+      fetchUsers();
+    } catch (error) {
+      if (error.code === "auth/email-already-in-use") {
+        setStatus("❌ This email is already registered.");
+      } else {
+        setStatus("❌ " + error.message);
+      }
+      console.error("User creation error:", error);
     }
-
-    // If role is Dealer, add partyCode
-    if (role === "dealer" && partyCode.trim()) {
-      userData.partyCode = partyCode.trim();
-    }
-
-    await setDoc(doc(db, "users", uid), userData);
-
-    setStatus("✅ User created!");
-    
-    // Reset fields
-    setEmail("");
-    setPassword("");
-    setName("");
-    setRole("so");
-    setReportsTo("");
-    setPartyCode(""); // clear Party Code input too if dealer
-
-    // Refresh user lists to reflect new users
-    fetchUsers();
-  } catch (error) {
-    if (error.code === "auth/email-already-in-use") {
-      setStatus("❌ This email is already registered.");
-    } else {
-      setStatus("❌ " + error.message);
-    }
-    console.error("User creation error:", error);
-  }
-};
+  };
 
 
   // === Add Party State ===
@@ -165,6 +170,43 @@ const AdminDashboard = () => {
     }
   };
 
+
+  const handleSearchOrders = async () => {
+    setDeleteStatus("");
+    if (!searchText.trim()) return;
+
+    try {
+      const q = query(
+        collection(db, "orders"),
+        where("partyName", ">=", searchText),
+        where("partyName", "<=", searchText + "\uf8ff")
+      );
+
+      const snapshot = await getDocs(q);
+      const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      setFoundOrders(orders);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setDeleteStatus("❌ Failed to fetch orders.");
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this order?");
+    if (!confirmDelete) return;
+
+    try {
+      await db.collection("orders").doc(orderId).delete();
+      setFoundOrders(prev => prev.filter(order => order.id !== orderId));
+      setDeleteStatus("✅ Order deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      setDeleteStatus("❌ Failed to delete order.");
+    }
+  };
+
+
   // Fetch Sales Officers and RSM users for dropdowns
   const fetchUsers = async () => {
     try {
@@ -199,13 +241,13 @@ const AdminDashboard = () => {
     <div className={styles.adminContainer}>
       <div className={styles.logoutBtn}>
         <div className={styles.logoContainer}>
-                    <img
-                        src={logo || "/logo.png"} // use imported logo if available, fallback to public path
-                        alt="Logo"
-                        className={styles.logo}
-                    />
-                    <h2>Admin Dashboard</h2>
-                </div>
+          <img
+            src={logo || "/logo.png"} // use imported logo if available, fallback to public path
+            alt="Logo"
+            className={styles.logo}
+          />
+          <h2>Admin Dashboard</h2>
+        </div>
         <button className={styles.Btn} onClick={async () => {
           await auth.signOut();
           navigate("/");
@@ -231,7 +273,15 @@ const AdminDashboard = () => {
         >
           Add Products
         </div>
+        <div
+          className={`${styles.card} ${activeSection === "deleteOrder" ? styles.activeCard : ""}`}
+          onClick={() => setActiveSection("deleteOrder")}
+        >
+          Delete Orders
+        </div>
       </div>
+
+
 
       <div className={styles.formContainer}>
         {activeSection === "users" && (
@@ -310,6 +360,47 @@ const AdminDashboard = () => {
             {status && <p className={styles.status}>{status}</p>}
           </>
         )}
+
+        {activeSection === "deleteOrder" && (
+          <>
+            <h3>Delete Orders</h3>
+            <div className={styles.form}>
+              <input
+                type="text"
+                placeholder="Search by Party Name"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className={styles.input}
+              />
+              <button onClick={handleSearchOrders} className={styles.button}>
+                Search Orders
+              </button>
+            </div>
+
+            {deleteStatus && <p className={styles.status}>{deleteStatus}</p>}
+
+            {foundOrders.length > 0 ? (
+              <div className={styles.orderList}>
+                {foundOrders.map((order) => (
+                  <div key={order.id} className={styles.orderItem}>
+                    <p><strong>Party:</strong> {order.partyName}</p>
+                    <p><strong>Order By:</strong> {order.soName || "Unknown"}</p>
+                    <p><strong>Status:</strong> {order.status}</p>
+                    <button
+                      onClick={() => handleDeleteOrder(order.id)}
+                      className={styles.dangerButton}
+                    >
+                      Delete Order
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>No orders found.</p>
+            )}
+          </>
+        )}
+
 
         {activeSection === "parties" && (
           <>

@@ -32,6 +32,14 @@ const RsmDashboard = () => {
   // const [commitmentDateFilter, setCommitmentDateFilter] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [viewRejectMessage, setViewRejectMessage] = useState("");
+  const [viewRejectModalOpen, setViewRejectModalOpen] = useState(false);
+  const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState("");
+  const [rejectingOrderId, setRejectingOrderId] = useState(null);
+  const [isRejecting, setIsRejecting] = useState(false);
+
+
 
   const ordersPerPage = 10;
 
@@ -284,7 +292,7 @@ const RsmDashboard = () => {
     if (activeStatus !== "All") {
       if (activeStatus === "Rejected") {
         filtered = filtered.filter(
-          (order) => order.status === "Rejected" || order.status === "Rejected By Logistic" || order.status ==="Rejected By BM/RSM"
+          (order) => order.status === "Rejected" || order.status === "Rejected By Logistic" || order.status === "Rejected By BM/RSM"
         );
       } else {
         filtered = filtered.filter((order) => order.status === activeStatus);
@@ -371,21 +379,36 @@ const RsmDashboard = () => {
     }
   };
 
-  const handleReject = async (orderId) => {
+  const handleReject = async () => {
+    if (!rejectionMessage.trim()) {
+      toast.warning("Please enter a rejection message.");
+      return;
+    }
+
+    setIsRejecting(true); // Start loading
+
     try {
-      const orderRef = doc(db, "orders", orderId);
+      const orderRef = doc(db, "orders", rejectingOrderId);
       await updateDoc(orderRef, {
         status: "Rejected By BM/RSM",
         approvedBy: auth.currentUser.uid,
+        rejectionMessage: rejectionMessage.trim(),
       });
 
       toast.success("Order rejected.");
+      setRejectionModalOpen(false);
+      setRejectionMessage("");
+      setRejectingOrderId(null);
       fetchOrders();
     } catch (err) {
       console.error("Error rejecting order:", err);
-      toast.error("Failed to reject order.");
+      toast.error("Failed To Reject Order.");
+    } finally {
+      setIsRejecting(false); // Stop loading
     }
   };
+
+
 
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const paginatedOrders = filteredOrders.slice(
@@ -603,7 +626,28 @@ const RsmDashboard = () => {
                       </>
                     )}
                   </td>
-                  <td>{order.status}</td>
+                  <td>
+                    {order.status}
+                    {(order.status === "Rejected" || order.status === "Rejected By Logistic" || order.status === "Rejected By BM/RSM") &&
+                      order.rejectionMessage && (
+                        <span
+                          title="View Rejection Message"
+                          onClick={() => {
+                            setViewRejectMessage(order.rejectionMessage);
+                            setViewRejectModalOpen(true);
+                          }}
+                          style={{
+                            marginLeft: 8,
+                            cursor: "pointer",
+                            color: "#e74c3c",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          ❗
+                        </span>
+                      )}
+                  </td>
+
                   <td>
                     <table className={styles.innerTable}>
                       <thead>
@@ -638,10 +682,15 @@ const RsmDashboard = () => {
                         </button>
                         <button
                           className={styles.rejectBtn}
-                          onClick={() => handleReject(order.id)}
+                          onClick={() => {
+                            setRejectingOrderId(order.id);
+                            setRejectionMessage("");
+                            setRejectionModalOpen(true);
+                          }}
                         >
                           Reject
                         </button>
+
                       </>
                     )}
                   </td>
@@ -672,6 +721,65 @@ const RsmDashboard = () => {
           ))}
         </div>
       )}
+
+      {rejectionModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <h2>Enter Rejection Message</h2>
+            <textarea
+              value={rejectionMessage}
+              onChange={(e) => setRejectionMessage(e.target.value)}
+              placeholder="Reason for rejection..."
+              rows={4}
+              style={{ width: "100%", marginBottom: "10px" }}
+            />
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelBtn}
+                onClick={() => {
+                  setRejectionModalOpen(false);
+                  setRejectionMessage("");
+                  setRejectingOrderId(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className={styles.modalConfirmBtn}
+                onClick={handleReject}
+                disabled={isRejecting}
+              >
+                {isRejecting ? "Rejecting..." : "Confirm Reject"}
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
+
+      {viewRejectModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <h2>Rejection Message</h2>
+            <p>{viewRejectMessage}</p>
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalCancelBtn}
+                onClick={() => {
+                  setViewRejectModalOpen(false);
+                  setViewRejectMessage('');
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer position="top-right" autoClose={2500} />
     </div>
   );

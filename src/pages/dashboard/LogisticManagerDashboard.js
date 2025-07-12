@@ -39,6 +39,14 @@ const LogisticManagerDashboard = () => {
   const [dateRange, setDateRange] = useState({ from: "", to: "" });
   const [commitmentDateFilter, setCommitmentDateFilter] = useState("");
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState('');
+  const [selectedRejectOrderId, setSelectedRejectOrderId] = useState(null);
+  const [viewRejectMessage, setViewRejectMessage] = useState(''); // new
+  const [viewRejectModalOpen, setViewRejectModalOpen] = useState(false); // new
+  const [isRejecting, setIsRejecting] = useState(false);
+
+
 
 
 
@@ -513,10 +521,11 @@ const LogisticManagerDashboard = () => {
       });
 
       await updateDoc(orderRef, {
-        products: order.products,
-        status: 'Logistic Reviewed',
-        balanceByCategory: categoryBalances,
+        status: 'Rejected By Logistic',
+        rejectionMessage: rejectionMessage.trim(),
+        finalApprovedBy: '', // 👈 clear approval
       });
+
 
       toast.success("Order Approved Successfully");
       await fetchOrders();
@@ -527,19 +536,43 @@ const LogisticManagerDashboard = () => {
   };
 
 
-  const handleReject = async (orderId) => {
+  const handleReject = (orderId) => {
+    setSelectedRejectOrderId(orderId);
+    setShowRejectModal(true);
+  };
+
+  // ✨ New confirm function
+  const confirmRejectOrderWithMessage = async () => {
+    if (!rejectionMessage.trim()) {
+      toast.error("Please Enter a Rejection Reason.");
+      return;
+    }
+
+    setIsRejecting(true);
+
     try {
-      const orderRef = doc(db, 'orders', orderId);
+      const orderRef = doc(db, 'orders', selectedRejectOrderId);
       await updateDoc(orderRef, {
         status: 'Rejected By Logistic',
+        rejectionMessage: rejectionMessage.trim(),
+        finalApprovedBy: '',
       });
-      toast.info("Order Rejected Successfully");
+
+      toast.success("Order Rejected with Message");
+
+      // Reset modal state
+      setShowRejectModal(false);
+      setRejectionMessage('');
+      setSelectedRejectOrderId(null);
       await fetchOrders();
     } catch (err) {
       console.error(err);
-      toast.error("Failed To Reject Order");
+      toast.error("Failed to Reject Order");
+    } finally {
+      setIsRejecting(false);
     }
   };
+
 
 
   const handleRevert = async (orderId) => {
@@ -547,6 +580,7 @@ const LogisticManagerDashboard = () => {
       const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, {
         status: 'Pending',
+        finalApprovedBy: '', // 👈 clear approval
       });
       toast.warn("Order Reverted To BM/RSM Successfully");
       await fetchOrders();
@@ -682,6 +716,63 @@ const LogisticManagerDashboard = () => {
               📝 Export PDF
             </button>
           </div>
+
+
+          {showRejectModal && (
+            <div className={styles.modalOverlay}>
+              <div className={styles.modalBox}>
+                <h2>Reject Order</h2>
+                <textarea
+                  className={styles.modalTextarea}
+                  placeholder="Enter Rejection Reason..."
+                  value={rejectionMessage}
+                  onChange={(e) => setRejectionMessage(e.target.value)}
+                />
+                <div className={styles.modalActions}>
+                  <button
+                    className={styles.modalCancelBtn}
+                    onClick={() => {
+                      setShowRejectModal(false);
+                      setRejectionMessage('');
+                      setSelectedRejectOrderId(null);
+                    }}
+                    disabled={isRejecting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className={styles.modalSubmitBtn}
+                    onClick={confirmRejectOrderWithMessage}
+                    disabled={isRejecting}
+                  >
+                    {isRejecting ? "Rejecting..." : "Confirm Reject"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+          {viewRejectModalOpen && (
+            <div className={styles.modalOverlay}>
+              <div className={styles.modalBox}>
+                <h2>Rejection Message</h2>
+                <p>{viewRejectMessage}</p>
+                <div className={styles.modalActions}>
+                  <button
+                    className={styles.modalCancelBtn}
+                    onClick={() => {
+                      setViewRejectModalOpen(false);
+                      setViewRejectMessage('');
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
 
           {isLoading ? <p>Loading orders...</p> : filteredOrders.length === 0 ? <p>No orders found.</p> : (
             <>
@@ -889,7 +980,22 @@ const LogisticManagerDashboard = () => {
                             )
                             : 'N/A'}
                         </td>
-                        <td>{order.status}</td>
+                        <td>
+                          {order.status}
+                          {(order.status === "Rejected" || order.status === "Rejected By Logistic") && order.rejectionMessage && (
+                            <span
+                              title="View Rejection Message"
+                              onClick={() => {
+                                setViewRejectMessage(order.rejectionMessage);
+                                setViewRejectModalOpen(true);
+                              }}
+                              style={{ marginLeft: 8, cursor: "pointer", color: "#e74c3c", fontWeight: "bold" }}
+                            >
+                              ❗
+                            </span>
+                          )}
+                        </td>
+
                         <td>{order.finalApprovedByName || 'N/A'}</td>
                         <td>
                           {order.status === "BM/RSM Submitted" && (

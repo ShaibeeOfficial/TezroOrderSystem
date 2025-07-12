@@ -40,11 +40,23 @@ const SODashboard = () => {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false); // 🔒 Double submit protection
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState("");
+
+
+
   // 🚀 Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
   const navigate = useNavigate();
+
+
+  const handleShowRejectionMessage = (message) => {
+    setRejectionMessage(message || "No rejection message provided.");
+    setShowRejectionModal(true);
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -282,7 +294,23 @@ const SODashboard = () => {
                           <td rowSpan={filteredProducts.length}>{order.partyMobile}</td>
                           <td rowSpan={filteredProducts.length}>{order.pod || "N/A"}</td>
                           <td rowSpan={filteredProducts.length}>{order.contactInfo || "N/A"}</td>
-                          <td rowSpan={filteredProducts.length}>{order.status}</td>
+                          <td rowSpan={filteredProducts.length}>
+                            {order.status}
+                            {["Rejected", "Rejected By Logistic", "Rejected By BM/RSM"].includes(order.status) && order.rejectionMessage && (
+                              <span
+                                onClick={() => handleShowRejectionMessage(order.rejectionMessage)}
+                                title="View Rejection Reason"
+                                style={{
+                                  marginLeft: "8px",
+                                  cursor: "pointer",
+                                  color: "#dc3545",
+                                  fontWeight: "bold",
+                                }}
+                              >
+                               ❗
+                              </span>
+                            )}
+                          </td>
                         </>
                       )}
                       <td>
@@ -414,6 +442,18 @@ const SODashboard = () => {
               <label>End Date: </label>
               <input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} />
             </div>
+            {showRejectionModal && (
+              <div className={styles.modalOverlay}>
+                <div className={styles.modalContent}>
+                  <h3>Rejection Message</h3>
+                  <p>{rejectionMessage}</p>
+                  <button onClick={() => setShowRejectionModal(false)} className={styles.modalCloseBtn}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
             {renderOrdersList()}
           </div>
         )}

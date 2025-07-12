@@ -67,6 +67,29 @@
   width: 100%;
 }
 
+
+.orderList {
+  margin-top: 20px;
+}
+
+.orderItem {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  background-color: #f8f8f8;
+}
+
+.dangerButton {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+
 .button {
   padding: 10px 20px;
   background: #0066cc;

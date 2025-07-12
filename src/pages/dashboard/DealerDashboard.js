@@ -42,10 +42,22 @@ const DealerDashboard = () => {
   const [approvedOrderCount, setApprovedOrderCount] = useState(0);
   const [pendingOrderCount, setPendingOrderCount] = useState(0);
   const [rejectedOrderCount, setRejectedOrderCount] = useState(0);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
 
 
 
   const navigate = useNavigate();
+
+  const openRejectionModal = (reason) => {
+    setRejectionReason(reason);
+    setShowRejectionModal(true);
+  };
+
+  const closeRejectionModal = () => {
+    setShowRejectionModal(false);
+    setRejectionReason("");
+  };
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -187,9 +199,10 @@ const DealerDashboard = () => {
               const rowStyle =
                 order.status === "Approved"
                   ? { backgroundColor: "#d4edda" }
-                  : order.status === "Rejected"
+                  : ["Rejected", "Rejected By BM/RSM", "Rejected By Logistic"].includes(order.status)
                     ? { backgroundColor: "#f8d7da" }
                     : {};
+
               return (
                 <tr key={order.id} style={rowStyle}>
                   <td>{date}</td>
@@ -197,7 +210,21 @@ const DealerDashboard = () => {
                   <td>{order.partyMobile}</td>
                   <td>{order.pod}</td>
                   <td>{order.contactInfo}</td>
-                  <td>{order.status}</td>
+                  <td>
+                    {order.status}
+                    {["Rejected", "Rejected By Logistic"].includes(order.status) &&
+                      order.rejectionReason?.trim() !== "" && (
+                        <button
+                          onClick={() => openRejectionModal(order.rejectionMessage)}
+                          style={{ marginLeft: 5, background: "none", border: "none", cursor: "pointer", color: "#dc3545" }}
+                          title="View Rejection Reason"
+                        >
+                          ❗
+                        </button>
+                      )}
+
+
+                  </td>
                   <td>
                     {order.products?.map((p, i) => (
                       <div key={i}>{p.name} × {p.quantity}</div>
@@ -326,6 +353,16 @@ const DealerDashboard = () => {
               <p><strong>Approved:</strong> {approvedOrderCount}</p>
               <p><strong>Rejected:</strong> {rejectedOrderCount}</p>
             </div>
+            {showRejectionModal && (
+              <div className={styles.modalOverlay}>
+                <div className={styles.modalContent}>
+                  <h3>Rejection Reason</h3>
+                  <p>{rejectionReason}</p>
+                  <button onClick={closeRejectionModal} className={styles.closeBtn}>Close</button>
+                </div>
+              </div>
+            )}
+
             {renderOrders()}
           </div>
         )}
