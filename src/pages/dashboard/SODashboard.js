@@ -307,7 +307,7 @@ const SODashboard = () => {
                                   fontWeight: "bold",
                                 }}
                               >
-                               ❗
+                                ❗
                               </span>
                             )}
                           </td>
@@ -338,6 +338,25 @@ const SODashboard = () => {
       </>
     );
   };
+
+// helper function for only Selecting Vegetables and Pearl Millat
+  const isVegetableOrPearlMillat = (product) => {
+    if (!product) return false;
+    const name = product.name?.toLowerCase() || "";
+    const category = product.category?.toLowerCase() || "";
+    return category === "vegetables" || category === "pearl millet" || name.includes("pearl millet");
+  };
+
+  const hasVegetableOrPearlMillatSelected = selectedProducts.some((p) => {
+    const prod = products.find((prod) => prod.id === p.productId);
+    return isVegetableOrPearlMillat(prod);
+  });
+
+  const hasOtherProductSelected = selectedProducts.some((p) => {
+    const prod = products.find((prod) => prod.id === p.productId);
+    return prod && !isVegetableOrPearlMillat(prod);
+  });
+
 
   return (
     <div className={styles.dashboardContainer}>
@@ -385,12 +404,49 @@ const SODashboard = () => {
             <textarea value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} placeholder="Enter Phone Number and Delivery Address" className={styles.partySection} />
             {selectedProducts.map((product, index) => (
               <div key={index} className={styles.productRow}>
-                <select value={product.productId} onChange={(e) => handleProductChange(index, "productId", e.target.value)} className={styles.productSelect}>
+                <select
+                  value={product.productId}
+                  onChange={(e) => {
+                    const selectedProd = products.find(p => p.id === e.target.value);
+                    if (!selectedProd) return;
+
+                    const isVegetableOrPearl = isVegetableOrPearlMillat(selectedProd);
+
+                    if (isVegetableOrPearl && hasOtherProductSelected) {
+                      toast.warning("You cannot select Vegetables or Pearl Millet with other products.");
+                      return;
+                    }
+
+                    if (!isVegetableOrPearl && hasVegetableOrPearlMillatSelected) {
+                      toast.warning("You cannot select other products with Vegetables or Pearl Millet.");
+                      return;
+                    }
+
+                    handleProductChange(index, "productId", e.target.value);
+                  }}
+                  className={styles.productSelect}
+                >
                   <option value="">Select Product</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name} - {p.variety} - {p.packSize} - {p.packType}</option>
+                  {Array.from(new Set(products.map(p => p.category))).map(category => (
+                    <optgroup label={category} key={category}>
+                      {products
+                        .filter(p => p.category === category)
+                        .map((p) => {
+                          const disable =
+                            (hasVegetableOrPearlMillatSelected && !isVegetableOrPearlMillat(p)) ||
+                            (hasOtherProductSelected && isVegetableOrPearlMillat(p));
+
+                          return (
+                            <option key={p.id} value={p.id} disabled={disable}>
+                              {p.name} - {p.variety} - {p.packSize} - {p.packType}
+                            </option>
+                          );
+                        })}
+                    </optgroup>
                   ))}
                 </select>
+
+
                 <input type="number" placeholder="Qty" min="1" value={product.quantity} onChange={(e) => handleProductChange(index, "quantity", e.target.value)} className={styles.qtyInput} />
                 <button onClick={() => {
                   const updated = selectedProducts.filter((_, i) => i !== index);

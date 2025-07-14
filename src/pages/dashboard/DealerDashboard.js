@@ -244,6 +244,24 @@ const DealerDashboard = () => {
     </>
   );
 
+  const isVegetableOrPearlMillat = (product) => {
+    if (!product) return false;
+    const name = product.name?.toLowerCase() || "";
+    const category = product.category?.toLowerCase() || "";
+    return category === "vegetables" || category === "pearl millet" || name.includes("pearl millet");
+  };
+
+  const hasVegetableOrPearlMillatSelected = orderProducts.some((p) => {
+    const prod = productList.find((prod) => prod.id === p.productId);
+    return isVegetableOrPearlMillat(prod);
+  });
+
+  const hasOtherProductSelected = orderProducts.some((p) => {
+    const prod = productList.find((prod) => prod.id === p.productId);
+    return prod && !isVegetableOrPearlMillat(prod);
+  });
+
+
   return (
     <div className={styles.dashboardContainer}>
       <ToastContainer position="top-center" />
@@ -290,26 +308,50 @@ const DealerDashboard = () => {
                   onChange={(e) => {
                     const selectedId = e.target.value;
                     const selectedProduct = productList.find(p => p.id === selectedId);
-                    if (selectedProduct) {
-                      const updatedProduct = {
-                        productId: selectedProduct.id,
-                        name: selectedProduct.name || "",
-                        category: selectedProduct.category || "",
-                        variety: selectedProduct.variety || "",
-                        packSize: selectedProduct.packSize || "",
-                        packType: selectedProduct.packType || "",
-                        quantity: product.quantity || "",
-                      };
-                      setOrderProducts(orderProducts.map((p, i) => i === index ? updatedProduct : p));
+                    if (!selectedProduct) return;
+
+                    const isVegOrPearl = isVegetableOrPearlMillat(selectedProduct);
+
+                    if (isVegOrPearl && hasOtherProductSelected) {
+                      toast.warning("You cannot select Vegetables or Pearl Millet with other products.");
+                      return;
                     }
+
+                    if (!isVegOrPearl && hasVegetableOrPearlMillatSelected) {
+                      toast.warning("You cannot select other products with Vegetables or Pearl Millet.");
+                      return;
+                    }
+
+                    const updatedProduct = {
+                      productId: selectedProduct.id,
+                      name: selectedProduct.name || "",
+                      category: selectedProduct.category || "",
+                      variety: selectedProduct.variety || "",
+                      packSize: selectedProduct.packSize || "",
+                      packType: selectedProduct.packType || "",
+                      quantity: product.quantity || "",
+                    };
+                    setOrderProducts(orderProducts.map((p, i) => i === index ? updatedProduct : p));
                   }}
                   className={styles.inputField}
                 >
                   <option value="">Select Product</option>
-                  {productList.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} - {p.variety} - {p.packSize} {p.packType}
-                    </option>
+                  {Array.from(new Set(productList.map(p => p.category))).map(category => (
+                    <optgroup key={category} label={category}>
+                      {productList
+                        .filter(p => p.category === category)
+                        .map(p => {
+                          const disable =
+                            (hasVegetableOrPearlMillatSelected && !isVegetableOrPearlMillat(p)) ||
+                            (hasOtherProductSelected && isVegetableOrPearlMillat(p));
+
+                          return (
+                            <option key={p.id} value={p.id} disabled={disable}>
+                              {p.name} - {p.variety} - {p.packSize} {p.packType}
+                            </option>
+                          );
+                        })}
+                    </optgroup>
                   ))}
                 </select>
 
