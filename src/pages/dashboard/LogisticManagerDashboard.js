@@ -521,7 +521,7 @@ const LogisticManagerDashboard = () => {
       });
 
       await updateDoc(orderRef, {
-        status: 'Rejected By Logistic',
+        status: 'Logistic Reviewed',
         rejectionMessage: rejectionMessage.trim(),
         finalApprovedBy: '', // 👈 clear approval
       });
