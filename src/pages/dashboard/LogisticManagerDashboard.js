@@ -509,23 +509,23 @@ const LogisticManagerDashboard = () => {
     try {
       const orderRef = doc(db, 'orders', order.id);
 
-      const categoryBalances = {};
-      order.products.forEach(p => {
-        const category = p.category || 'Uncategorized';
-        const debit = parseFloat(p.debit || 0);
-        const credit = parseFloat(p.credit || 0);
-        if (!categoryBalances[category]) {
-          categoryBalances[category] = 0;
-        }
-        categoryBalances[category] += credit - debit;
-      });
+      // Ensure credit/debit are stored as numbers
+      const updatedProducts = order.products.map(p => ({
+        ...p,
+        credit: parseFloat(p.credit || 0),
+        debit: parseFloat(p.debit || 0),
+      }));
+
+      // Recalculate total balance
+      const totalBalance = updatedProducts.reduce((acc, p) => acc + (p.credit - p.debit), 0);
 
       await updateDoc(orderRef, {
         status: 'Logistic Reviewed',
         rejectionMessage: rejectionMessage.trim(),
-        finalApprovedBy: '', // 👈 clear approval
+        finalApprovedBy: '', // Clear previous approver
+        products: updatedProducts, // ✅ Save updated product credit/debit
+        balance: totalBalance      // ✅ Save balance (optional if used elsewhere)
       });
-
 
       toast.success("Order Approved Successfully");
       await fetchOrders();
@@ -534,6 +534,7 @@ const LogisticManagerDashboard = () => {
       toast.error("Failed To Approve Order");
     }
   };
+
 
 
   const handleReject = (orderId) => {

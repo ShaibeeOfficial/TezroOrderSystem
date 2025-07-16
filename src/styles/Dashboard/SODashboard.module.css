@@ -146,6 +146,28 @@
   cursor: pointer;
 }
 
+.comboBoxWrapper {
+  position: relative;
+}
+
+.dropdownList {
+  border: 1px solid #ccc;
+  background-color: white;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.dropdownList li {
+  padding: 12px 16px;
+  /* easy to tap */
+  font-size: 16px;
+}
+
+
 
 .totalBox {
   background-color: #6c757d;

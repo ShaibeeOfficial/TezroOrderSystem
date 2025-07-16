@@ -43,6 +43,10 @@ const SODashboard = () => {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [rejectionMessage, setRejectionMessage] = useState("");
 
+  const [partySearchTerm, setPartySearchTerm] = useState("");
+  const [filteredPartyOptions, setFilteredPartyOptions] = useState([]);
+  const [showPartyDropdown, setShowPartyDropdown] = useState(false);
+
 
 
   // 🚀 Pagination state
@@ -56,6 +60,21 @@ const SODashboard = () => {
     setRejectionMessage(message || "No rejection message provided.");
     setShowRejectionModal(true);
   };
+
+
+  useEffect(() => {
+    if (partySearchTerm.trim() === "") {
+      setFilteredPartyOptions([]);
+      setShowPartyDropdown(false);
+    } else {
+      const filtered = parties.filter(p =>
+        p.name.toLowerCase().includes(partySearchTerm.toLowerCase())
+      );
+      setFilteredPartyOptions(filtered);
+      setShowPartyDropdown(true);
+    }
+  }, [partySearchTerm, parties]);
+
 
 
   useEffect(() => {
@@ -143,27 +162,33 @@ const SODashboard = () => {
 
     // Validate form
     if (!selectedParty) {
-      toast.error("Please select a party.");
+      toast.error("Please Select a Valid Party.");
+      return;
+    }
+
+    const selectedPartyObj = parties.find(p => p.name === selectedParty);
+    if (!selectedPartyObj) {
+      toast.error("Invalid Party Selected. Please Choose From The List.");
       return;
     }
 
     if (!partyMobile.trim()) {
-      toast.error("Please enter the party phone number.");
+      toast.error("Please Enter The Party Phone Number.");
       return;
     }
 
     if (!pod.trim()) {
-      toast.error("Please enter the POD.");
+      toast.error("Please Enter The POD.");
       return;
     }
 
     if (!contactInfo.trim()) {
-      toast.error("Please enter contact info.");
+      toast.error("Please Enter Contact Info.");
       return;
     }
 
     if (selectedProducts.length === 0) {
-      toast.error("Please add at least one product.");
+      toast.error("Please Add At Least One Product.");
       return;
     }
 
@@ -176,8 +201,7 @@ const SODashboard = () => {
       return;
     }
 
-    const selectedPartyObj = parties.find(p => p.name === selectedParty);
-    const partyCode = selectedPartyObj?.code || "N/A";
+    const partyCode = selectedPartyObj.code;
     const refCode = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
 
     const enrichedProducts = selectedProducts.map(p => {
@@ -233,6 +257,7 @@ const SODashboard = () => {
       setSubmitting(false);
     }
   };
+
 
   const renderOrdersList = () => {
     if (loadingOrders) return <p>Loading orders...</p>;
@@ -339,7 +364,7 @@ const SODashboard = () => {
     );
   };
 
-// helper function for only Selecting Vegetables and Pearl Millat
+  // helper function for only Selecting Vegetables and Pearl Millat
   const isVegetableOrPearlMillat = (product) => {
     if (!product) return false;
     const name = product.name?.toLowerCase() || "";
@@ -390,12 +415,57 @@ const SODashboard = () => {
           <div className={styles.formSection}>
             <h3>Place New Order</h3>
             <label>Party</label>
-            <select value={selectedParty} onChange={(e) => setSelectedParty(e.target.value)} className={styles.partySection}>
-              <option value="">Select a party</option>
-              {parties.map((p) => (
-                <option key={p.id} value={p.name}>{p.name}</option>
-              ))}
-            </select>
+            <div className={styles.comboBoxWrapper} style={{ position: "relative" }}>
+              <input
+                type="text"
+                className={styles.partySection}
+                placeholder="Search and select a party"
+                value={partySearchTerm || selectedParty}
+                onChange={(e) => {
+                  setPartySearchTerm(e.target.value);
+                  setSelectedParty(""); // clear selection while typing
+                }}
+                onFocus={() => setShowPartyDropdown(true)}
+                onBlur={() => setTimeout(() => setShowPartyDropdown(false), 150)} // delay to allow click
+              />
+
+              {showPartyDropdown && filteredPartyOptions.length > 0 && (
+                <ul className={styles.dropdownList} style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                  backgroundColor: "white",
+                  border: "1px solid #ccc",
+                  zIndex: 10,
+                  padding: 0,
+                  margin: 0,
+                  listStyle: "none"
+                }}>
+                  {filteredPartyOptions.map(p => (
+                    <li
+                      key={p.id}
+                      onClick={() => {
+                        setSelectedParty(p.name);
+                        setPartySearchTerm(p.name);
+                        setShowPartyDropdown(false);
+                      }}
+                      style={{
+                        padding: "8px",
+                        borderBottom: "1px solid #eee",
+                        cursor: "pointer",
+                        backgroundColor: selectedParty === p.name ? "#f0f0f0" : "white"
+                      }}
+                    >
+                      {p.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <label>Party Phone Number</label>
             <input type="text" value={partyMobile} onChange={(e) => setPartyMobile(e.target.value)} className={styles.inputField} placeholder="Enter Party Phone Number" />
             <label>POD</label>
