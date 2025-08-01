@@ -13,7 +13,7 @@ import {
 import { signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { FiMenu } from "react-icons/fi";
-import styles from "../../styles/Dashboard/DirectOrderDashboard.module.css";
+import styles from "../../styles/Dashboard/GMDashboard.module.css";
 import logo from "../../assets/logo.jpg";
 
 // 🟨 Toastify Imports
@@ -22,7 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const ORDERS_PER_PAGE = 10;
 
-const DirectOrderDashboard = () => {
+const GMDashboard = () => {
   const [activeTab, setActiveTab] = useState("placeOrder");
   const [partyList, setPartyList] = useState([]);
   const [selectedPartyId, setSelectedPartyId] = useState("");
@@ -466,4 +466,4 @@ const DirectOrderDashboard = () => {
   );
 };
 
-export default DirectOrderDashboard;
+export default GMDashboard;

@@ -49,6 +49,9 @@ const Login = () => {
           case "factoryprocgm":
             navigate("/dashboard/direct");
             break;
+          case "directsales":
+            navigate("/dashboard/directsales");
+            break;
           default:
             navigate("/dashboard");
         }
@@ -67,7 +70,7 @@ const Login = () => {
     <div className={styles.loginPage}>
       <div className={styles.loginBox}>
         <h2>Welcome to Tezro</h2>
-        <p className={styles.subtext}>Sign in to manage orders and products</p>
+        <p className={styles.subtext}>Sign in to Manage Orders</p>
 
         {error && <p className={styles.error}>{error}</p>}
 

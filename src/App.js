@@ -7,9 +7,10 @@ import SODashboard from "./pages/dashboard/SODashboard";
 import UserProfile from "./components/UserProfile";
 import LogisticManagerDashboard from "./pages/dashboard/LogisticManagerDashboard";
 import BossDashboard from "./pages/dashboard/BossDashboard";
-import DirectOrderDashboard from "./pages/dashboard/DirectOrderDashboard";
+import GMDashboard from "./pages/dashboard/GMDashbord";
 import DealerDashboard from "./pages/dashboard/DealerDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DirectSalesDashboard from "./pages/dashboard/DirectSalesDashboard";
 
 function App() {
   return (
@@ -80,7 +81,15 @@ function App() {
           path="/dashboard/direct"
           element={
             <ProtectedRoute allowedRole={["factoryprocgm", "khanpursale"]}>
-              <DirectOrderDashboard />
+              <GMDashboard/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/directsales"
+          element={
+            <ProtectedRoute allowedRole="directsales">
+              <DirectSalesDashboard/>
             </ProtectedRoute>
           }
         />

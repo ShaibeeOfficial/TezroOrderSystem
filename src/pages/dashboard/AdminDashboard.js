@@ -210,7 +210,7 @@ const AdminDashboard = () => {
   // Fetch Sales Officers and RSM users for dropdowns
   const fetchUsers = async () => {
     try {
-      const rolesToFetch = ["so", "rsm", "factoryprocgm", "khanpursale"];
+      const rolesToFetch = ["so", "rsm", "factoryprocgm", "khanpursale", "directsales"];
 
       const queries = await Promise.all(
         rolesToFetch.map((role) =>
@@ -223,7 +223,7 @@ const AdminDashboard = () => {
       );
 
       setSalesOfficers(allUsers.filter((user) =>
-        ["so", "factoryprocgm", "khanpursale"].includes(user.role)
+        ["so", "factoryprocgm", "khanpursale", "directsales"].includes(user.role)
       ));
       setRsmUsers(allUsers.filter((user) => user.role === "rsm"));
 
@@ -330,6 +330,7 @@ const AdminDashboard = () => {
                 <option value="owner">Company Owner</option>
                 <option value="admin">Admin</option>
                 <option value="factoryprocgm">Factory Procurement GM</option>
+                <option value="directsales">Direct Sale SO</option>
                 {/* <option value="khanpursale">Khanpur Sale Point</option> */}
               </select>
 
@@ -495,6 +496,7 @@ const AdminDashboard = () => {
                 <option value="Paddy">Paddy</option>
                 <option value="Sultan Afgoi">Sultan Afgoi</option>
                 <option value="Hybrid Corn"> Hybrid Corn</option>
+                <option value="Hybrid Corn Fodder"> Hybrid Corn Fodder</option>
                 <option value="Sorghum">Sorghum</option>
                 <option value="Cotton">Cotton</option>
                 <option value="Mustard">Mustard</option>
