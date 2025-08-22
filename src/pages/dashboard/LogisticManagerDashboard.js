@@ -140,7 +140,7 @@ const LogisticManagerDashboard = () => {
             // Only include real products
             const isLedgerEntry = name === "n/a" || quantity === 0;
 
-            return !isLedgerEntry && (category === "vegetables" || category === "pearl millet");
+            return !isLedgerEntry && (category === "vegetables" || category === "pearl millet" || category === "hyrbid mustard" || category === "mustard");
           })
         );
       } else if (currentUser?.email === "shakil@tezro.pk") {
@@ -153,7 +153,7 @@ const LogisticManagerDashboard = () => {
             // Only consider real products
             const isLedgerEntry = name === "n/a" || quantity === 0;
 
-            return isLedgerEntry || (category !== "vegetables" && category !== "pearl millet");
+            return isLedgerEntry || (category !== "vegetables" && category !== "pearl millet" && category !== "hyrbid mustard" && category !== "mustard");
           })
         );
       }
