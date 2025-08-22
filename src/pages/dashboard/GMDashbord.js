@@ -276,7 +276,7 @@ const GMDashboard = () => {
     if (!product) return false;
     const name = product.name?.toLowerCase() || "";
     const category = product.category?.toLowerCase() || "";
-    return category === "vegetables" || category === "pearl millet" || name.includes("pearl millet");
+    return category === "vegetables" || category === "pearl millet" || name.includes("pearl millet") || category === "hyrbid mustard" || category === "mustard" || name.includes("mustard");
   };
 
   const hasVegetableOrPearlMillatSelected = orderProducts.some((p) => {
