@@ -132,12 +132,15 @@ const DirectSalesDashboard = () => {
     setSelectedProducts(updated);
   };
 
-  const resetOrderForm = () => {
+ const resetOrderForm = () => {
     setSelectedParty("");
+    setPartySearchTerm(""); 
     setSelectedProducts([]);
     setPartyMobile("");
     setPod("");
     setContactInfo("");
+    setCommitmentOfPayment("");
+    setCommitmentDate("");
   };
 
   const handleSubmitOrder = async () => {

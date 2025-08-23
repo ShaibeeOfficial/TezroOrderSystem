@@ -151,6 +151,7 @@ const SODashboard = () => {
 
   const resetOrderForm = () => {
     setSelectedParty("");
+    setPartySearchTerm(""); 
     setSelectedProducts([]);
     setPartyMobile("");
     setPod("");
