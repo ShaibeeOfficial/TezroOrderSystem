@@ -41,6 +41,10 @@ const DirectSalesDashboard = () => {
   const [partySearchTerm, setPartySearchTerm] = useState("");
   const [filteredPartyOptions, setFilteredPartyOptions] = useState([]);
   const [showPartyDropdown, setShowPartyDropdown] = useState(false);
+  const [commitmentOfPayment, setCommitmentOfPayment] = useState("");
+  const [commitmentDate, setCommitmentDate] = useState("");
+
+
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const navigate = useNavigate();
@@ -165,6 +169,15 @@ const DirectSalesDashboard = () => {
       return;
     }
 
+    if (!commitmentOfPayment.trim()) {
+      toast.error("Please enter Commitment Message");
+      return;
+    }
+    if (!commitmentDate) {
+      toast.error("Please select a Commitment Date");
+      return;
+    }
+
     if (selectedProducts.length === 0) {
       toast.error("Please Add At Least One Product.");
       return;
@@ -186,23 +199,23 @@ const DirectSalesDashboard = () => {
       const product = products.find(prod => prod.id === p.productId);
       return product
         ? {
-            productId: p.productId,
-            name: product.name || "",
-            category: product.category || "N/A",
-            variety: product.variety || "N/A",
-            packSize: product.packSize || "N/A",
-            packType: product.packType || "N/A",
-            quantity: p.quantity,
-          }
+          productId: p.productId,
+          name: product.name || "",
+          category: product.category || "N/A",
+          variety: product.variety || "N/A",
+          packSize: product.packSize || "N/A",
+          packType: product.packType || "N/A",
+          quantity: p.quantity,
+        }
         : {
-            productId: p.productId,
-            name: "Unknown",
-            category: "N/A",
-            variety: "N/A",
-            packSize: "N/A",
-            packType: "N/A",
-            quantity: p.quantity,
-          };
+          productId: p.productId,
+          name: "Unknown",
+          category: "N/A",
+          variety: "N/A",
+          packSize: "N/A",
+          packType: "N/A",
+          quantity: p.quantity,
+        };
     });
 
     const order = {
@@ -216,6 +229,8 @@ const DirectSalesDashboard = () => {
       partyMobile,
       pod,
       contactInfo,
+      commitmentOfPayment,
+      commitmentDate,
       products: enrichedProducts,
       status: "Placed",
       createdAt: serverTimestamp(),
@@ -272,8 +287,8 @@ const DirectSalesDashboard = () => {
                   order.status === "Approved"
                     ? { backgroundColor: "#d4edda" }
                     : order.status === "Rejected" || order.status === "Rejected By Logistic"
-                    ? { backgroundColor: "#f8d7da" }
-                    : {};
+                      ? { backgroundColor: "#f8d7da" }
+                      : {};
 
                 return filteredProducts.length === 0 ? (
                   <tr key={order.id} style={rowStyle}>
@@ -443,6 +458,25 @@ const DirectSalesDashboard = () => {
             <textarea value={pod} onChange={(e) => setPod(e.target.value)} placeholder="Enter Your POD" className={styles.partySection} />
             <label>Contact Info</label>
             <textarea value={contactInfo} onChange={(e) => setContactInfo(e.target.value)} placeholder="Enter Phone Number and Delivery Address" className={styles.partySection} />
+            {/* ✅ Commitment Section */}
+            <label>Commitment of Payment</label>
+            <textarea
+              value={commitmentOfPayment}
+              onChange={(e) => setCommitmentOfPayment(e.target.value)}
+              placeholder="Enter commitment details"
+              className={styles.partySection}
+            />
+
+            <label>Commitment Date</label>
+            <input
+              type="date"
+              value={commitmentDate}
+              onChange={(e) => setCommitmentDate(e.target.value)}
+              className={styles.inputField}
+            />
+            <br />
+            <br />
+
             {selectedProducts.map((product, index) => (
               <div key={index} className={styles.productRow}>
                 <select
